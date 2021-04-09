@@ -1,0 +1,107 @@
+//////////////////////////////////////////////////////////////////
+//                                                              //
+// strings - public domain string manipulation library for umka //
+// by Marek Maskarinec                                          //
+// https://github.com/marekmaskarinec/libs                      //
+//                                                              //
+// How to use:                                                  //
+// 	just import this.                                           //
+//                                                              //
+//////////////////////////////////////////////////////////////////
+
+// same as standard slice, but usable with string. the numbers are inclusive
+fn sslice*(inp: str, start, end: int): str {
+	tr := ""
+
+	for i, s in inp {
+		if i >= start && i <= end {
+			tr += s
+		}
+	}
+
+	return tr
+}
+
+// joins an array of string into one and adds a joiner between them
+fn join*(inp: []str, joiner: str): str {
+	tr := ""
+
+	for i:=0; i < len(inp); i++ {
+		tr += inp[i]
+
+		if i != len(inp) - 1 {
+			tr += joiner
+		}
+	}
+
+	return tr
+}
+
+fn _replace(inp, pattern, repl: str): []str {
+	lsplit := -1
+
+	tr := []str{}
+
+	for i:=0; i < len(inp); i++ {
+		s := inp[i]
+
+		if s == pattern[0] {
+			for j:=0; pattern[j] == inp[i]; j++ {
+				if j == len(pattern) - 1 {
+					tr = append(tr, sslice(inp, lsplit + 1 , i - len(pattern)))
+					if repl != "" {
+						tr = append(tr, repl)
+					}
+					lsplit = i
+					break		
+				}
+
+				i++
+			}
+		}
+	}
+
+	tr = append(tr, sslice(inp, lsplit + 1, len(inp)-1))
+
+	return tr
+}
+
+// replaces an pattern with a string
+fn replace*(inp, pattern, replacer: str): str { return join(_replace(inp, pattern, replacer), "") }
+
+// splits a string, every time a pattern occurs. it deletes it (equivalent to replace(s, pattern, ""))
+fn split*(inp: str, splitter: str): []str { return _replace(inp, splitter, "") }
+
+fn chartoupper(inp: char): char { 
+	if int(inp) >= 97 && int(inp) <= 133 {
+		return char(int(inp) - 32) 
+	}
+
+	return inp
+}
+
+// returns the same string, but characters are upper case
+fn toupper*(inp: str): str {
+	for i:=0; i < len(inp); i++ {
+		inp[i] = chartoupper(inp[i])
+	}
+
+	return inp
+}
+
+fn chartolower(inp: char): char {
+	if int(inp) >= 63 && int(inp) <= 90 {
+		return char(int(inp) + 32) 
+	}
+
+	return inp
+}
+
+// returns the same string, but all characters are lower case
+fn tolower*(inp: str): str {
+	for i:=0; i < len(inp); i++ {
+		inp[i] = chartolower(inp[i])
+	}
+
+	return inp
+}

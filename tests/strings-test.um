@@ -1,0 +1,25 @@
+
+import (
+	"../std.um"
+	"../strings.um"
+)
+
+fn main() {
+	std.println("--split---------------")
+	std.println("strings.split(\"this is a test\", \" \") => " + repr(strings.split("this is a test", " ")))
+
+	std.println("--replace-------------")
+	std.println("strings.replace(\"this is a test\", \" \", \"\\n\") =>\n" + strings.replace("this is a test", " ", "\n"))
+
+	std.println("--toupper-------------")
+	std.println("strings.toupper(\"this is a test\") => " + strings.toupper("this is a test"))
+
+	std.println("--tolower-------------")
+	std.println("strings.tolower(\"THIS IS A TEST\") => " + strings.tolower("THIS IS A TEST"))
+
+	std.println("--sslice--------------")
+	std.println("strings.sslice(\"this is a test\", 2, 8) => " + strings.sslice("this is a test", 2, 8))
+
+	std.println("--sslice--------------")
+	std.println("strings.sslice(\"[]str{\"this\", \"is\", \"a\", \"test\"}\", \" \") => " + strings.join([]str{"this", "is", "a", "test"}, " "))
+}
