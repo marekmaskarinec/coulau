@@ -22,6 +22,19 @@ fn sslice*(inp: str, start, end: int): str {
 	return tr
 }
 
+// returns true, if string is contained in another string
+fn contains*(inp, check: str): bool {
+	for i:=0; i < len(inp); i++ {
+		for j:=0; inp[i+j] == check[j] && j < len(check); j++ {
+			if j == len(check) - 1 {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // joins an array of string into one and adds a joiner between them
 fn join*(inp: []str, joiner: str): str {
 	tr := ""

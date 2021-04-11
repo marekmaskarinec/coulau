@@ -20,6 +20,10 @@ fn main() {
 	std.println("--sslice--------------")
 	std.println("strings.sslice(\"this is a test\", 2, 8) => " + strings.sslice("this is a test", 2, 8))
 
-	std.println("--sslice--------------")
-	std.println("strings.sslice(\"[]str{\"this\", \"is\", \"a\", \"test\"}\", \" \") => " + strings.join([]str{"this", "is", "a", "test"}, " "))
+	std.println("--join---------------")
+	std.println("strings.join(\"[]str{\"this\", \"is\", \"a\", \"test\"}\", \" \") => " + strings.join([]str{"this", "is", "a", "test"}, " "))
+
+	std.println("--contains--------------")
+	std.println("strings.contains(\"this is a test\", \"is a\") => " + repr(strings.contains("this is a test", "is a")))
+	std.println("strings.contains(\"this is a test\", \"is_a\") => " + repr(strings.contains("this is a test", "is_a")))
 }
