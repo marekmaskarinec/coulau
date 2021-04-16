@@ -1,0 +1,60 @@
+//////////////////////////////////////////////////////////////////
+//                                                              //
+// csv.um - public domain csv parser and encoder for umka       //
+// by Marek Maskarinec                                          //
+// https://github.com/marekmaskarinec/libs                      //
+//                                                              //
+// How to use:                                                  //
+//   just import this                                           //
+//                                                              //
+// csv 101:                                                     //
+//   value,value2                                               //
+//   row2, value4                                               //
+//       ||                                                     //
+//       \/                                                     //
+//  [["value", "value2"],                                       //
+//   ["row2", " value4"]]                                       //
+//                                                              //
+//////////////////////////////////////////////////////////////////
+
+fn gettocomma(s: int, inp: str, le: ^int): str {
+	out := ""
+	i := s
+	for j:=0; i < len(inp) && inp[i] != ',' && inp[i] != '\n'; i++ {
+		out += inp[i]
+	}
+	le^ = i - 1
+	return out
+}
+
+// parses input csv string.
+fn parse*(inp: str): [][]str {
+	out := [][]str{}
+	var r, c: int
+	out = append(out, []str{gettocomma(0, inp, &c)})
+	c = 1
+	for i:=0; i < len(inp); i++ {
+		if inp[i] == '\n' {
+			r++
+			c = 1
+			out = append(out, []str{gettocomma(i+1, inp, &i)})
+		} else if inp[i] == ',' {
+			out[r] = append(out[r], gettocomma(i+1, inp, &i))
+			c++
+		}
+	}
+	return out
+}
+
+// turns 2d string array to string
+fn encode*(inp: [][]str): str {
+	out := ""
+	for i:=0; i < len(inp); i++ {
+		for j:=0; j < len(inp[i]); j++ {
+			out += inp[i][j]
+			if j < len(inp[i])-1 { out += "," }
+		}
+		out += "\n"
+	}
+	return out
+}

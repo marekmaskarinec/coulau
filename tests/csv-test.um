@@ -1,0 +1,11 @@
+
+import (
+	"../csv.um"
+)
+
+fn main() {
+	testval := "val1,val2\nanother row,still another row,third value,fourth value\n"
+	res := csv.parse(testval)
+	printf("%s\n", repr(res))
+	printf("%s\n", csv.encode(res))
+}

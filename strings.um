@@ -1,13 +1,13 @@
-//////////////////////////////////////////////////////////////////
-//                                                              //
-// strings - public domain string manipulation library for umka //
-// by Marek Maskarinec                                          //
-// https://github.com/marekmaskarinec/libs                      //
-//                                                              //
-// How to use:                                                  //
-// 	just import this.                                           //
-//                                                              //
-//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// strings.um - public domain string manipulation library for umka  //
+// by Marek Maskarinec                                              //
+// https://github.com/marekmaskarinec/libs                          //
+//                                                                  //
+// How to use:                                                      //
+//   just import this.                                              //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
 
 // same as standard slice, but usable with string. the numbers are inclusive
 fn sslice*(inp: str, start, end: int): str {

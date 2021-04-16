@@ -1,0 +1,15 @@
+
+import (
+	"../farbfeld.um"
+)
+
+fn main() {
+	data, w, h, err := farbfeld.load("fftest.ff")
+
+	if err != farbfeld.SUCCESS {
+		printf("loading returned with %d", err)
+		return
+	}
+
+	printf("width: %d, height %d\n---------------data %s\n", w, h, repr(data))
+}
