@@ -12,7 +12,6 @@
 // same as standard slice, but usable with string. the numbers are inclusive
 fn sslice*(inp: str, start, end: int): str {
 	tr := ""
-
 	for i, s in inp {
 		if i >= start && i <= end {
 			tr += s
@@ -38,10 +37,8 @@ fn contains*(inp, check: str): bool {
 // joins an array of string into one and adds a joiner between them
 fn join*(inp: []str, joiner: str): str {
 	tr := ""
-
 	for i:=0; i < len(inp); i++ {
 		tr += inp[i]
-
 		if i != len(inp) - 1 {
 			tr += joiner
 		}
@@ -52,12 +49,10 @@ fn join*(inp: []str, joiner: str): str {
 
 fn _replace(inp, pattern, repl: str): []str {
 	lsplit := -1
-
 	tr := []str{}
 
 	for i:=0; i < len(inp); i++ {
 		s := inp[i]
-
 		if s == pattern[0] {
 			for j:=0; pattern[j] == inp[i]; j++ {
 				if j == len(pattern) - 1 {
@@ -68,12 +63,10 @@ fn _replace(inp, pattern, repl: str): []str {
 					lsplit = i
 					break		
 				}
-
 				i++
 			}
 		}
 	}
-
 	tr = append(tr, sslice(inp, lsplit + 1, len(inp)-1))
 
 	return tr
@@ -117,4 +110,11 @@ fn tolower*(inp: str): str {
 	}
 
 	return inp
+}
+
+// repeats string count number of times
+fn repeat*(inp: str, count: int): str {
+	out := ""
+	for i:=0; i < count; i++ { out += inp }
+	return out
 }

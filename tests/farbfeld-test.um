@@ -1,6 +1,7 @@
 
 import (
 	"../farbfeld.um"
+	"../strings.um"
 )
 
 fn main() {
@@ -11,5 +12,12 @@ fn main() {
 		return
 	}
 
-	printf("width: %d, height %d\n---------------data %s\n", w, h, repr(data))
+	printf("width: %d, height %d\n", w, h)
+	for i:=0; i < h; i++ {
+		printf(strings.repeat("-", w*10-1) + "\n")
+		for j:=0; j < w; j++ {
+			printf("%x", data[i * w + j])
+			if j != h-1 { printf(" | ") } else { printf("\n") }
+		}
+	}
 }
