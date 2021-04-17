@@ -20,4 +20,7 @@ fn main() {
 			if j != h-1 { printf(" | ") } else { printf("\n") }
 		}
 	}
+	
+	printf("writing to fftest-write.ff")
+	farbfeld.write("fftest-write.ff", data, w)
 }

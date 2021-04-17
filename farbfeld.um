@@ -1,11 +1,12 @@
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// farbfeld.um - public domain farbfeld parser                      //
+// farbfeld.um - public domain farbfeld parser and writer           //
 // by Marek Maskarinec                                              //
 // https://github.com/marekmaskarinec/libs                          //
 //                                                                  //
 // How to use:                                                      //
-//   just import this.                                              //
+//   get yourself a copy of std.um, change line 21 to import from   //
+//   a correct path and import this file.                           //
 //                                                                  //
 // Return values:                                                   //
 //   parse() returns four values. Data itself,                      //
@@ -15,12 +16,10 @@
 //   in format of 0xrrggbbaa. Iteration over it is shown            //
 //   in the test.                                                   //
 //                                                                  //
-// NOTE: encoder coming soon                                        //
-//                                                                  //
 //////////////////////////////////////////////////////////////////////
 
 import (
-	"std.um"								
+	"std.um" // change me for your std location
 )
 
 const (
@@ -57,6 +56,7 @@ fn peekn(f: std.File, next: int): int {
 	return tr
 }
 
+// loads image at path
 fn load*(path: str): ([]uint32, int, int, int) {
 	f := std.fopen(path, "r")
 	if f == null {
@@ -103,5 +103,37 @@ fn load*(path: str): ([]uint32, int, int, int) {
 		}
 	}
 
+	std.fclose(f)
 	return tr, w, h, SUCCESS
+}
+
+fn tbend(inp: uint32): uint32 {
+	var b0,b1,b2,b3: uint32
+
+	b0 = (inp & 0x000000ff) << 24
+	b1 = (inp & 0x0000ff00) << 8
+	b2 = (inp & 0x00ff0000) >> 8
+	b3 = (inp & 0xff000000) >> 24
+
+	return b0 | b1 | b2 | b3
+}
+
+// writes a farbfeld file from data. w is width of the image
+fn write*(path: str, data: []uint32, w: int): int {
+	f := std.fopen(path, "w")
+	if f == null {
+		return FILE_ERROR
+	}
+
+	fprintf(f, "farbfeld")
+	std.fwrite(f, tbend(uint32(w)))
+	std.fwrite(f, tbend(uint32(len(data)/w)))
+	for i:=0; i < len(data); i++ {
+		for j:=0; j < 8; j++ {
+			std.fwrite(f, char((data[i] | (0xff << (j/2 * 8))) >> 24))
+		}
+	}
+
+	std.fclose(f)
+	return SUCCESS
 }
