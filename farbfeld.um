@@ -16,6 +16,8 @@
 //   in format of 0xrrggbbaa. Iteration over it is shown            //
 //   in the test.                                                   //
 //                                                                  //
+// NOTE: encoder is broken atm                                      //
+//                                                                  //
 //////////////////////////////////////////////////////////////////////
 
 import (
@@ -26,11 +28,7 @@ const (
 	SUCCESS* = 0
 	FILE_ERROR* = 1
 	MAGIC_BYTE_ERROR* = 2
-	WIDTH_ERROR* = 3
-	HEIGHT_ERROR* = 4	
 )
-
-var counter: int
 
 fn peekstr(f: std.File, next: int): str {
 	tr := "" 
@@ -38,7 +36,6 @@ fn peekstr(f: std.File, next: int): str {
 		var c: char
 		fscanf(f, "%c", &c)
 		tr += str(c)
-		counter++
 	}
 
 	return tr
@@ -50,7 +47,6 @@ fn peekn(f: std.File, next: int): int {
 		var c: char 
 		fscanf(f, "%c", &c)
 		tr += int(c) << (8 * (next - i - 1))
-		counter++
 	}
 
 	return tr
@@ -59,47 +55,22 @@ fn peekn(f: std.File, next: int): int {
 // loads image at path
 fn load*(path: str): ([]uint32, int, int, int) {
 	f := std.fopen(path, "r")
-	if f == null {
-		return []uint32{}, -1, -1, FILE_ERROR
-	}
+	if f == null { return []uint32{}, -1, -1, FILE_ERROR }
 	var w, h: int
 	var tr: []uint32
-	counter = 0
 
-	for i:=0; i < 18 {
-		switch i {
-		case 0:
-			if val := peekstr(f, 8); val != "farbfeld" {
-				return []uint32{}, -1, -1, MAGIC_BYTE_ERROR
-			}
-			i += 8
-		case 8:
-			w = peekn(f, 4)
-			if w < 0 {
-				return []uint32{}, -1, -1, WIDTH_ERROR
-			}
-			i += 4
-		case 12:
-			h = peekn(f, 4)
-			if h < 0 {
-				return []uint32{}, -1, -1, HEIGHT_ERROR
-			}
-			i += 4
-		default:
-			tr = make([]uint32, w * h)
-			var c: char 
-			for j:=0; j < w * h; j++ {
-				for h:=0; h < 4; h++ {
-					fscanf(f, "%c", &c)
-					fscanf(f, "%c", &c)
-					ic := int(c)
-					if ic < 0 {
-						ic += 256 
-					}
-					tr[j] += ic << (8 * (3 - h))
-				}
-			}
-			break
+	if val := peekstr(f, 8); val != "farbfeld" { return []uint32{}, -1, -1, MAGIC_BYTE_ERROR }
+	w = peekn(f, 4)
+	h = peekn(f, 4)
+	tr = make([]uint32, w * h)
+	var c: char 
+	for j:=0; j < w * h; j++ {
+		for h:=0; h < 4; h++ {
+			fscanf(f, "%c", &c)
+			fscanf(f, "%c", &c)
+			ic := int(c)
+			if ic < 0 { ic += 256 }
+			tr[j] += ic << (8 * (3 - h))
 		}
 	}
 
@@ -107,31 +78,28 @@ fn load*(path: str): ([]uint32, int, int, int) {
 	return tr, w, h, SUCCESS
 }
 
-fn tbend(inp: uint32): uint32 {
-	var b0,b1,b2,b3: uint32
+fn tbend(inp: uint32): uint32 { return (inp & 0x000000ff) << 24 | (inp & 0x0000ff00) << 8 | (inp & 0x00ff0000) >> 8 | (inp & 0xff000000) >> 24 }
 
-	b0 = (inp & 0x000000ff) << 24
-	b1 = (inp & 0x0000ff00) << 8
-	b2 = (inp & 0x00ff0000) >> 8
-	b3 = (inp & 0xff000000) >> 24
+// splits a pixel into 4 chars
+fn pixelsplit*(inp: uint32): (uint8, uint8, uint8, uint8) {
+	var ps: [4]uint8
 
-	return b0 | b1 | b2 | b3
+	for j:=0; j < 4; j++ { ps[j] = uint8((inp | (0xff << (j * 8))) >> 24) }
+	return ps[0], ps[1], ps[2], ps[3]
 }
+
+fn topixel*(r, g, b, a: char): uint8 { return int(r) << 24 | int(g) << 16 | int(b) << 8 | int(a) }
 
 // writes a farbfeld file from data. w is width of the image
 fn write*(path: str, data: []uint32, w: int): int {
 	f := std.fopen(path, "w")
-	if f == null {
-		return FILE_ERROR
-	}
+	if f == null { return FILE_ERROR }
 
 	fprintf(f, "farbfeld")
 	std.fwrite(f, tbend(uint32(w)))
 	std.fwrite(f, tbend(uint32(len(data)/w)))
 	for i:=0; i < len(data); i++ {
-		for j:=0; j < 8; j++ {
-			std.fwrite(f, char((data[i] | (0xff << (j/2 * 8))) >> 24))
-		}
+		for j:=0; j < 8; j++ { std.fwrite(f, char((data[i] | (0xff << (j/2 * 8))) >> 24)) }
 	}
 
 	std.fclose(f)
