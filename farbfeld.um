@@ -30,8 +30,8 @@ const (
 
 fn peekstr(f: std.File, next: int): str {
 	tr := "" 
+	var c: char
 	for i:=0; i < next; i++ {
-		var c: char
 		fscanf(f, "%c", &c)
 		tr += str(c)
 	}
@@ -41,8 +41,8 @@ fn peekstr(f: std.File, next: int): str {
 
 fn peekn(f: std.File, next: int): int {
 	tr := 0
+	var c: char 
 	for i:=0; i < next; i++ {
-		var c: char 
 		fscanf(f, "%c", &c)
 		tr += int(c) << (8 * (next - i - 1))
 	}
@@ -81,7 +81,6 @@ fn tbend(inp: uint32): uint32 { return (inp & 0x000000ff) << 24 | (inp & 0x0000f
 // splits a pixel into 4 uint8s
 fn pixelsplit*(inp: uint32): (uint8, uint8, uint8, uint8) {
 	var ps: [4]uint8
-
 	for i:=0; i < 4; i++ { ps[i] = uint8(inp >> (24 - (i * 8)) & 0xff) }
 	return ps[0], ps[1], ps[2], ps[3]
 }
@@ -98,9 +97,7 @@ fn write*(path: str, data: []uint32, w: int): int {
 	std.fwrite(f, tbend(uint32(w)))
 	std.fwrite(f, tbend(uint32(len(data)/w)))
 	for i:=0; i < len(data); i++ {
-		for j:=0; j < 8; j++ {
-			std.fwrite(f, uint8(data[i] >> (24 - ((j / 2) * 8)) & 0xff))
-		}
+		for j:=0; j < 8; j++ { std.fwrite(f, uint8(data[i] >> (24 - ((j / 2) * 8)) & 0xff)) }
 	}
 
 	std.fclose(f)
