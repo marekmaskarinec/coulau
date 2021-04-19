@@ -16,8 +16,6 @@
 //   in format of 0xrrggbbaa. Iteration over it is shown            //
 //   in the test.                                                   //
 //                                                                  //
-// NOTE: encoder is broken atm                                      //
-//                                                                  //
 //////////////////////////////////////////////////////////////////////
 
 import (
@@ -80,15 +78,16 @@ fn load*(path: str): ([]uint32, int, int, int) {
 
 fn tbend(inp: uint32): uint32 { return (inp & 0x000000ff) << 24 | (inp & 0x0000ff00) << 8 | (inp & 0x00ff0000) >> 8 | (inp & 0xff000000) >> 24 }
 
-// splits a pixel into 4 chars
+// splits a pixel into 4 uint8s
 fn pixelsplit*(inp: uint32): (uint8, uint8, uint8, uint8) {
 	var ps: [4]uint8
 
-	for j:=0; j < 4; j++ { ps[j] = uint8((inp | (0xff << (j * 8))) >> 24) }
+	for i:=0; i < 4; i++ { ps[i] = uint8(inp >> (24 - (i * 8)) & 0xff) }
 	return ps[0], ps[1], ps[2], ps[3]
 }
 
-fn topixel*(r, g, b, a: char): uint8 { return int(r) << 24 | int(g) << 16 | int(b) << 8 | int(a) }
+// merges r, g, b and a values into one
+fn pixelmerge*(r, g, b, a: uint8): uint32 { return r << 24 | g << 16 | b << 8 | a }
 
 // writes a farbfeld file from data. w is width of the image
 fn write*(path: str, data: []uint32, w: int): int {
@@ -99,7 +98,9 @@ fn write*(path: str, data: []uint32, w: int): int {
 	std.fwrite(f, tbend(uint32(w)))
 	std.fwrite(f, tbend(uint32(len(data)/w)))
 	for i:=0; i < len(data); i++ {
-		for j:=0; j < 8; j++ { std.fwrite(f, char((data[i] | (0xff << (j/2 * 8))) >> 24)) }
+		for j:=0; j < 8; j++ {
+			std.fwrite(f, uint8(data[i] >> (24 - ((j / 2) * 8)) & 0xff))
+		}
 	}
 
 	std.fclose(f)

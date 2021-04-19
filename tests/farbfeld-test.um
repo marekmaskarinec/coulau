@@ -18,6 +18,9 @@ fn main() {
 		for j:=0; j < w; j++ {
 			printf("%x", data[i * w + j])
 			if j != h-1 { printf(" | ") } else { printf("\n") }
+			r, g, b, a := farbfeld.pixelsplit(data[i*w+j])
+			avg := (r+g+b)/3
+			data[i*w+j] = farbfeld.pixelmerge(avg, avg, avg, a)
 		}
 	}
 	
