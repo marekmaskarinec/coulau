@@ -14,16 +14,16 @@ fn main() {
 
 	printf("width: %d, height %d\n", w, h)
 	for i:=0; i < h; i++ {
-		printf(strings.repeat("-", w*10-1) + "\n")
+		//printf(strings.repeat("-", w*10-1) + "\n")
 		for j:=0; j < w; j++ {
-			printf("%x", data[i * w + j])
-			if j != h-1 { printf(" | ") } else { printf("\n") }
+			//printf("%x", data[i * w + j])
+			//if j != h-1 { printf(" | ") } else { printf("\n") }
 			r, g, b, a := farbfeld.pixelsplit(data[i*w+j])
 			avg := (r+g+b)/3
 			data[i*w+j] = farbfeld.pixelmerge(avg, avg, avg, a)
 		}
 	}
 	
-	printf("writing to fftest-write.ff")
+	printf("writing to fftest-write.ff\n")
 	farbfeld.write("fftest-write.ff", data, w)
 }

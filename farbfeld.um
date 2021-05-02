@@ -8,6 +8,9 @@
 //   get yourself a copy of std.um, change line 21 to import from   //
 //   a correct path and import this file.                           //
 //                                                                  //
+// TODO:                                                            //
+//   make pixelsplit and merge faster                               //
+//                                                                  //
 // Return values:                                                   //
 //   parse() returns four values. Data itself,                      //
 //   width of the image, height of the image and                    //
@@ -15,6 +18,11 @@
 //   in this file. The data itself is an array of uints32           //
 //   in format of 0xrrggbbaa. Iteration over it is shown            //
 //   in the test.                                                   //
+//                                                                  //
+// Benchmarks:                                                      //
+//   1 minute and 4 seconds to load 4928x3024 image                 //
+//   1 minute and 4 seconds to load 1024x683 image, convert it      //
+//     to monochromatic and write it to another file.               //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
@@ -44,7 +52,9 @@ fn peekn(f: std.File, next: int): int {
 	var c: char 
 	for i:=0; i < next; i++ {
 		fscanf(f, "%c", &c)
-		tr += int(c) << (8 * (next - i - 1))
+		ic := int(c)
+		if ic < 0 { ic += 256 }
+		tr += ic << (8 * (next - i - 1))
 	}
 
 	return tr
