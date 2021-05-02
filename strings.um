@@ -7,18 +7,18 @@
 // How to use:                                                      //
 //   just import this.                                              //
 //                                                                  //
+// TODO:                                                            //
+//  - increase performance                                          //
+//                                                                  //
+//                                                                  //
 //////////////////////////////////////////////////////////////////////
 
 // same as standard slice, but usable with string. the numbers are inclusive
 fn sslice*(inp: str, start, end: int): str {
-	tr := ""
-	for i, s in inp {
-		if i >= start && i <= end {
-			tr += s
-		}
-	}
-
-	return tr
+	if start >= len(inp) { return "" }
+	e := end+1
+	if end+1 >= len(inp) { e = len(inp) }
+	return slice(inp, start, e)
 }
 
 // returns true, if string is contained in another string

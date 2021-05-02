@@ -1,0 +1,10 @@
+import (
+	"../strings.um"								
+	"ipsum.um"
+)
+
+fn main() {
+	inp := ipsum.lipsum
+
+	strings.replace(inp, " ", "  ")
+}

@@ -1,0 +1,21 @@
+
+import (
+	"std.um"								
+)
+
+fn main() {
+	argoff := 0
+	if std.argv(0) == "umka" {
+		argoff = 1
+	}
+
+	libdata := ""
+	moddata := ""
+
+	for i:=argoff; i < std.argc(); i++ {
+		moddata += std.argv(i)
+		libdata := strtoc(readall(std.argv(i)))
+	}
+
+	printf(header+libdata+main+moddata+footer)
+}
