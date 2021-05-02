@@ -1,21 +1,99 @@
+//////////////////////////////////////////////////////
+//                                                  //
+// umka2bin.um - public domain umka to c coneverter //
+// by Marek Maskarinec                              //
+// https://github.com/marekmaskarinec/libs          //
+//                                                  //
+// How to use:                                      //
+//   run this without any argument for help         //
+//                                                  //
+// TODO:                                            //
+//  - automatic imports                             //
+//                                                  //
+//////////////////////////////////////////////////////
 
 import (
-	"std.um"								
+	"std.um"
+	"strings.um"
 )
 
+// reads all content of a file. this function is made by vtereshkov
+fn readall(f: std.File): str {
+    const blockSize = 16
+    res := ""
+
+    for ok := true; ok {
+	    var buff: [blockSize + 1]char
+	    ok = std.fread(f, ^[blockSize]char(&buff)) == 1
+	    res += str([]char(buff))
+    }
+
+    return res
+}
+
+// converts string to c string
+fn strtoc(inp: str): str {
+	out := ""
+	splt := strings.split(inp, "\n")
+
+	for i:=0; i < len(splt); i++ {
+		tmp := strings.replace(splt[i], "\\", "\\\\")
+		out += "\"" + strings.replace(tmp, "\"", "\\\"") + "\\n\"\n"
+	}
+
+	return out
+}
+
+// prints help
+fn help() {
+	printf("umka2bin. Public domain umka into c embedder by Marek Maskarinec.\n")
+	printf("source code: https://github.com/marekmaskarinec/libs/blob/main/umka2bin.um\n")
+	printf("usage:\n")
+	printf("    Pass files, that should be embedded as arguments. First one is the one, that should have main function.\n")
+	printf("    You need to pass all the dependencies. Then you will receive c source code as output.\n")
+	printf("    Build it using `cc cc source.c -o name -L. -lumka -lm -ldl`. Supply your own libumka.a and umka_api.h.\n")
+}
+
 fn main() {
+	if std.argc() == 0 {
+		help()
+		return
+	}
+
 	argoff := 0
 	if std.argv(0) == "umka" {
 		argoff = 1
 	}
 
-	libdata := ""
-	moddata := ""
-
-	for i:=argoff; i < std.argc(); i++ {
-		moddata += std.argv(i)
-		libdata := strtoc(readall(std.argv(i)))
+	if std.argc() < 2 + argoff {
+		help()
+		return
 	}
 
-	printf(header+libdata+main+moddata+footer)
+	includes := "#include \"umka_api.h\"\n#include <stdio.h>\n"
+
+	header := "int main(int argc, char **argv) {\n	int umkaInitBodies = 0, umkaDrawBodies = 0;\n	void *umka = umkaAlloc();\n"
+
+	header += "int umkaOk = umkaInit(umka, \"" + std.argv(argoff+1) + "\"," + "libs[0]" + " , 1024 * 1024, 1024 * 1024, argc, argv);\n"
+
+	compile := "if (!umkaOk) {\n		printf(\"could not initialize umka\\n\");\n		return 1;\n	}\n	umkaOk = umkaCompile(umka);\n	if (!umkaOk) {\n		UmkaError error;\n		umkaGetError(umka, &error);\n		printf(\"Umka error %s (%d, %d): %s\\n\", error.fileName, error.line, error.pos, error.msg);\n		return 1;\n	}\n	umkaOk = umkaRun(umka);\n	if (!umkaOk) {\n		UmkaError error;\n		umkaGetError(umka, &error);\n		printf(\"Umka runtime error %s (%d): %s\\n\", error.fileName, error.line, error.msg);\n	}        \n	umkaFree(umka);\n}\n"
+
+	libdata := "const char *libs[] = {\n"
+	moddata := ""
+
+	for i:=argoff+1; i < std.argc(); i++ {
+		f := std.fopen(std.argv(i), "r")
+		libdata += strtoc(readall(f)) + ","
+		if i != argoff+1 {
+			moddata += "umkaAddModule(umka, \"" + std.argv(i) + "\", libs[" + repr(i-(argoff+1)) + "]);\n"
+		}
+		std.fclose(f)
+	}
+	libdata += "};\n"
+
+	printf("%s", includes)
+	printf("%s", libdata)
+	printf("%s", header)
+	printf("%s", moddata)
+	printf("%s", compile)
 }
