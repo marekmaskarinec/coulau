@@ -8,7 +8,7 @@
 //   run this without any argument for help         //
 //                                                  //
 // TODO:                                            //
-//  - automatic imports                             //
+//  - automatic imports from different locations    //
 //                                                  //
 //////////////////////////////////////////////////////
 
@@ -17,7 +17,9 @@ import (
 	"strings.um"
 )
 
-// reads all content of a file. this function is made by vtereshkov
+//////////////////////////////////
+// io
+
 fn readall(f: std.File): str {
     const blockSize = 16
     res := ""
@@ -31,7 +33,10 @@ fn readall(f: std.File): str {
     return res
 }
 
-// converts string to c string
+
+//////////////////////////////////
+// c conversion
+
 fn strtoc(inp: str): str {
 	out := ""
 	splt := strings.split(inp, "\n")
@@ -44,14 +49,88 @@ fn strtoc(inp: str): str {
 	return out
 }
 
-// prints help
+//////////////////////////////////
+// dependencies
+
+fn trimdep(inp: str): str {
+	out := ""
+	for i:=0; i < len(inp); i++ {
+		if !(inp[i] == ' ' || inp[i] == '\"' || inp[i] == '\t') {
+			out += inp[i]
+		}
+	}
+	return out
+}
+
+fn getdeps(fname: str): []str {
+	f := std.fopen(fname, "r")
+	if f == null {
+		return []str{}
+	}
+	inp := readall(f)
+	std.fclose(f)
+
+	split := strings.split(inp, "\n")
+	out := []str{}
+
+	for i:=0; i < len(split); i++ {
+		if strings.contains(split[i], "import") && split[i][0] == 'i' {
+			if strings.contains(split[i], "(") {
+				for j:=1; j < len(split) && !strings.contains(split[i+j], ")"); j++ {
+					if strings.contains(split[i+j], "\"") {
+						out = append(out, trimdep(split[i+j]))
+					}
+				}
+				return out
+			}
+			if lsplit := strings.split(split[i], " "); len(lsplit) > 1 {
+				out = append(out, lsplit[1])
+				return out
+			}
+		}
+	}
+	return out
+}
+
+fn mergedeps(inp1, inp2: []str): []str {
+	for i:=0; i < len(inp2); i++ {
+		canadd := true
+		for j:=0; j < len(inp1); j++ {
+			if inp1[j] == inp2[i] {
+				canadd = false
+				break
+			}
+		}
+		if canadd {
+			inp1 = append(inp1, inp2[i])
+		}
+	}
+	return inp1
+}
+
+fn deplist(dir, inp: str): []str {
+	out := getdeps(dir+inp)
+	for i:=0; i < len(out); i++ {
+		deps := deplist(dir, out[i])
+		out = mergedeps(deps, out)
+	}
+	return out
+}
+
+fn getdir(inp: str): str {
+	split := strings.split(inp, "/")
+	return strings.join(slice(split, 0, len(split)-1), "/")
+}
+
+//////////////////////////////////
+// rest
+
 fn help() {
 	printf("umka2bin. Public domain umka into c embedder by Marek Maskarinec.\n")
 	printf("source code: https://github.com/marekmaskarinec/libs/blob/main/umka2bin.um\n")
 	printf("usage:\n")
-	printf("    Pass files, that should be embedded as arguments. First one is the one, that should have main function.\n")
-	printf("    You need to pass all the dependencies. Then you will receive c source code as output.\n")
-	printf("    Build it using `cc cc source.c -o name -L. -lumka -lm -ldl`. Supply your own libumka.a and umka_api.h.\n")
+	printf("    Pass the file, that contains the main function. Dependencies will get fetches automatically, if they are in the same folder.\n")
+	printf("    Build it using `cc source.c -o name -L. -lumka -lm -ldl`. Supply your own libumka.a and umka_api.h.\n")
 }
 
 fn main() {
@@ -70,6 +149,9 @@ fn main() {
 		return
 	}
 
+	files := []str{std.argv(argoff+1)}
+	files = append(files, deplist(getdir(files[0]), files[0]))
+
 	includes := "#include \"umka_api.h\"\n#include <stdio.h>\n"
 
 	header := "int main(int argc, char **argv) {\n	int umkaInitBodies = 0, umkaDrawBodies = 0;\n	void *umka = umkaAlloc();\n"
@@ -81,11 +163,11 @@ fn main() {
 	libdata := "const char *libs[] = {\n"
 	moddata := ""
 
-	for i:=argoff+1; i < std.argc(); i++ {
-		f := std.fopen(std.argv(i), "r")
+	for i:=0; i < len(files); i++ {
+		f := std.fopen(files[i], "r")
 		libdata += strtoc(readall(f)) + ","
-		if i != argoff+1 {
-			moddata += "umkaAddModule(umka, \"" + std.argv(i) + "\", libs[" + repr(i-(argoff+1)) + "]);\n"
+		if i != 0 {
+			moddata += "umkaAddModule(umka, \"" + files[i] + "\", libs[" + repr(i) + "]);\n"
 		}
 		std.fclose(f)
 	}

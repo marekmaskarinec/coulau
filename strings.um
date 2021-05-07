@@ -24,7 +24,7 @@ fn sslice*(inp: str, start, end: int): str {
 // returns true, if string is contained in another string
 fn contains*(inp, check: str): bool {
 	for i:=0; i < len(inp); i++ {
-		for j:=0; inp[i+j] == check[j] && j < len(check); j++ {
+		for j:=0; i+j < len(inp) && inp[i+j] == check[j] && j < len(check); j++ {
 			if j == len(check) - 1 {
 				return true
 			}
