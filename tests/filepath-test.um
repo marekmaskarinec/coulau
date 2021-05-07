@@ -1,0 +1,22 @@
+
+import (
+	"../filepath.um"
+)
+
+fn main() {
+	printf("--dir----------\n")
+	printf("dir(\"/foo/bar/baz\") => %s\n", filepath.dir("/foo/bar/baz"))
+	printf("dir(\"/foo/bar/baz/\") => %s\n", filepath.dir("/foo/bar/baz/"))
+	printf("--ext----------\n")
+	printf("ext(\"/foo/bar/baz.um\") => %s\n", filepath.ext("/foo/bar/baz.um"))
+	printf("ext(\"/foo/bar/baz.um\") => %s\n", filepath.ext("/foo/bar/baz"))
+	printf("--split--------\n")
+	file, dir := filepath.split("/foo/bar/baz")
+	printf("split(\"/foo/bar/baz\") => %s, %s\n", file, dir)
+	file, dir = filepath.split("/foo/bar/baz/")
+	printf("split(\"/foo/bar/baz/\") => %s, %s\n", file, dir)
+	printf("--fromslash----\n")
+	printf("no effect on unix-like systems\n")
+	printf("%s\n", filepath.fromslash("/foo/bar/baz"))
+	printf("%s\n", filepath.toslash(filepath.fromslash("/foo/bar/baz")))
+}

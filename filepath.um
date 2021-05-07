@@ -1,0 +1,137 @@
+////////////////////////////////////////////////////////////////////////
+//                                                                    //
+// filepath.um - public domain, os agnostic filepath utility for umka //
+// by Marek Maskarinec                                                //
+// https://github.com/marekmaskarinec/libs                            //
+//                                                                    //
+// How to use:                                                        //
+//   replace std.um with the path to your std.um                      //
+//                                                                    //
+////////////////////////////////////////////////////////////////////////
+
+import (
+	"std.um"
+)
+
+const (
+	nil* = 0
+	windows* = 10
+	linux* = 11
+)
+
+var fileseparator*: char // platform specific file separator. linux => /, windows => \
+var os*: int // current os
+var initialized: bool
+
+// initializes platform specific stuff
+fn init() {
+	os = windows
+	if std.getenv("HOME") != "" {
+		os = linux
+	}
+
+	switch os {
+	case linux:
+		fileseparator = '/'
+	case windows:
+		fileseparator = '\\'
+	}
+
+	initialized = true
+}
+
+// checks, if string contains a char
+fn chcont(inp: str, c: char): bool {
+	for i:=0; i < len(inp); i++ {
+		if inp[i] == c {
+			return true
+		}
+	}
+	return false
+}
+
+// returns the directory in inp
+fn dir*(inp: str): str {
+	if !initialized {
+		init()
+	}
+
+	if !chcont(inp, fileseparator) {
+		return "."
+	}
+
+	ln := 0
+	for inp[len(inp)-ln-1] != fileseparator {
+		ln++
+	}
+
+	return slice(inp, 0, len(inp)-ln)
+}
+
+// returns the extension of file inp. if there is no extension, or it is a diroctory, output is ""
+fn ext*(inp: str): str {
+	if !initialized {
+		init()
+	}
+
+	if !chcont(inp, '.') {
+		return ""
+	}
+
+	ln := 0
+	for inp[len(inp)-ln-1] != '.' {
+		ln++
+	}
+
+	return slice(inp, len(inp)-ln-1, len(inp))
+}
+
+// converts / to platform specific separator
+fn fromslash*(inp: str): str {
+	if !initialized {
+		init()
+	}
+
+	if !chcont(inp, '/') || fileseparator == '/' {
+		return inp
+	}
+
+	for i:=0; i < len(inp); i++ {
+		if inp[i] == '/' {
+			inp[i] = fileseparator
+		}
+	}
+
+	return inp
+}
+
+// converts platform specific separator to /
+fn toslash*(inp: str) : str {
+	if !initialized {
+		init()
+	}
+
+	if !chcont(inp, fileseparator) || fileseparator == '/' {
+		return inp
+	}
+
+	for i:=0; i < len(inp); i++ {
+		if inp[i] == fileseparator {
+			inp[i] = '/'
+		}
+	}
+
+	return inp
+}
+
+// returns the direcory and file of inp. if inp is a folder, it return "" as a file
+fn split*(inp: str): (str, str) {
+	if !initialized {
+		init()
+	}
+
+	dr := dir(inp)
+	if len(dr) == len(inp) { return dr, "" }
+	fname := slice(inp, len(dr), len(inp))
+	return dr, fname
+}
