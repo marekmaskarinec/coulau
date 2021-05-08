@@ -118,3 +118,49 @@ fn repeat*(inp: str, count: int): str {
 	for i:=0; i < count; i++ { out += inp }
 	return out
 }
+
+// trims whitespaces from the start and end of a string
+fn trimspaces*(inp: str): str {
+	var start, end: int
+
+	for start < len(inp) && inp[start] == ' ' {
+		start++
+	}
+
+	end = len(inp)-1
+	for end >= 0 && inp[end] == ' ' {
+		end--
+	}
+
+	return slice(inp, start, end+1)
+}
+
+// trims a prefix of a string
+fn trimprefix*(inp: str, prefix: str): str {
+	lenght := 0
+
+	for lenght < len(prefix) && lenght < len(inp) && inp[lenght] == prefix[lenght] {
+		lenght++
+	}
+
+	if lenght != len(prefix) {
+		return inp
+	}
+
+	return slice(inp, lenght, len(inp))
+}
+
+// trims a suffix of a string
+fn trimsuffix*(inp: str, suffix: str): str {
+	lenght := len(inp) - 1
+
+	for i:=len(suffix)-1; i >= 0 && lenght >= 0 && inp[lenght] == suffix[i]; i-- {
+		lenght--
+	}
+
+	if len(inp) - 1 - lenght != len(suffix) {
+		return inp
+	}
+
+	return slice(inp, 0, lenght+1)
+}
