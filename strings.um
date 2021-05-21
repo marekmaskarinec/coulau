@@ -10,7 +10,6 @@
 // TODO:                                                            //
 //  - increase performance                                          //
 //                                                                  //
-//                                                                  //
 //////////////////////////////////////////////////////////////////////
 
 // same as standard slice, but usable with string. the numbers are inclusive
@@ -49,25 +48,28 @@ fn join*(inp: []str, joiner: str): str {
 
 fn _replace(inp, pattern, repl: str): []str {
 	lsplit := -1
-	tr := []str{}
+	ilen := len(inp)
+	tr := make([]str, ilen)
+	trc := 0
 
-	for i:=0; i < len(inp); i++ {
+	for i:=0; i < ilen; i++ {
 		s := inp[i]
 		if s == pattern[0] {
-			for j:=0; pattern[j] == inp[i]; j++ {
-				if j == len(pattern) - 1 {
-					tr = append(tr, sslice(inp, lsplit + 1 , i - len(pattern)))
-					if repl != "" {
-						tr = append(tr, repl)
-					}
-					lsplit = i
-					break		
+			if ilen < i + len(pattern) { return tr }
+
+			if slice(inp, i, i + len(pattern)) == pattern {
+				tr[trc] = sslice(inp, lsplit + 1 , i - len(pattern))
+				trc++
+				if repl != "" {
+					tr[trc] = repl
+					trc++
 				}
-				i++
+				lsplit = i
 			}
 		}
 	}
-	tr = append(tr, sslice(inp, lsplit + 1, len(inp)-1))
+	tr[trc] = sslice(inp, lsplit + 1, ilen-1)
+	tr = slice(tr, 0, trc+1)
 
 	return tr
 }
