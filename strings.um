@@ -12,6 +12,52 @@
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
+// builder allows for faster string addition.
+const BUILDER_STEP = 1024
+type builder* = struct {
+	len: int
+	buf: []char
+}
+
+// creates an allocated builder
+fn mk_builder*(): builder {
+	out := builder{}
+	out.len = 0
+	out.buf = make([]char, BUILDER_STEP)
+
+	return out
+}
+
+// increases buffer size
+fn (b: ^builder) increase_buffer() {
+	b.buf = append(b.buf, make([]char, BUILDER_STEP))
+}
+
+// writes a string to a builder
+fn (b: ^builder) write_str*(inp: str) {
+	for b.len + len(inp) >= len(b.buf) {
+		b.increase_buffer()
+	}
+
+	for i:=0; i < len(inp); i++ {
+		b.buf[b.len] = inp[i]
+		b.len++
+	}
+}
+
+// writes a char to the builder
+fn (b: ^builder) write_char*(inp: char) {
+	if b.len >= len(b.buf) {
+		b.increase_buffer()
+	}
+	b.buf[b.len] = inp
+}
+
+// returns the content of a builder as a string
+fn (b: ^builder) to_str*(): str {
+	return str(slice(b.buf, 0, b.len+1))
+}
+
 // same as standard slice, but usable with string. the numbers are inclusive
 fn sslice*(inp: str, start, end: int): str {
 	if start >= len(inp) { return "" }
@@ -35,15 +81,16 @@ fn contains*(inp, check: str): bool {
 
 // joins an array of string into one and adds a joiner between them
 fn join*(inp: []str, joiner: str): str {
-	tr := ""
+	b := mk_builder()
+
 	for i:=0; i < len(inp); i++ {
-		tr += inp[i]
+		b.write_str(inp[i])
 		if i != len(inp) - 1 {
-			tr += joiner
+			b.write_str(joiner)
 		}
 	}
 
-	return tr
+	return b.to_str()
 }
 
 fn _replace(inp, pattern, repl: str): []str {
@@ -116,9 +163,9 @@ fn tolower*(inp: str): str {
 
 // repeats string count number of times
 fn repeat*(inp: str, count: int): str {
-	out := ""
-	for i:=0; i < count; i++ { out += inp }
-	return out
+	b := mk_builder()
+	for i:=0; i < count; i++ { b.write_str(inp) }
+	return b.to_str()
 }
 
 // trims whitespaces from the start and end of a string
