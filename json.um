@@ -1,4 +1,21 @@
-// This is still wip and shoudn't be used.
+//////////////////////////////////////////////////////////////
+//                                                          //
+// json.um - public domain json parser for umka             //
+// by Marek Maskarinec                                      //
+// https://github.com/marekmaskarinec/libs                  //
+//                                                          //
+// How to use:                                              //
+//   First you need to replace map.um and std.um            //
+//   for the location, where you have them. Then            //
+//   you can use the parse function. It takes a             //
+//   string for input and returns an interface.             //
+//   The interface is either []interface{}, or              //
+//   map.Map.                                               //
+//                                                          //
+// TODO:                                                    //
+//   Benchmark this.                                        //
+//                                                          //
+//////////////////////////////////////////////////////////////
 
 import (
 	"map.um" // change me for your map.um location
@@ -40,7 +57,7 @@ fn (l: ^lexer) lex_str(): str {
 	for true {
 		c := l.get()
 
-		if c == '"' && l.inp[l.pos-2] != '\\' { // bound check TODO
+		if l.pos > 1 && c == '"' && l.inp[l.pos-2] != '\\' {
 			break
 		}
 
@@ -80,7 +97,7 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 		l.pos++
 	}
 
-	switch l.get() { // TODO: arrays
+	switch l.get() {
 	case '{':
 		return token{tok_opener, l.pos, "{"}, true
 	case '}':
@@ -188,12 +205,10 @@ fn (l: ^lexer) parse_array(): []interface{} {
 	return out
 }
 
-fn main() {
-	l := lexer{
-		//inp: "{\"name\": \"Bob\", \"recursion\": {\"does this work?\": 1.2}, \"email\":\"bob32@gmail.com\"}",
-		inp: "[1, {\"name\": \"Bob\", \"email\": \"bob32@gmail.com\"}, 5, 3, 5]",
-		pos: 0 }
-	
+// parser json provided as an input and returns either map.Map or []interface{}
+fn parse*(inp: str): interface{} {
+	l := lexer{inp, 0}
+
 	t, end := l.lex_next()
 	var out: interface{}
 
@@ -206,5 +221,5 @@ fn main() {
 		parser_error("top level type can only be an object or an array")
 	}
 
-	printf("%s\n", repr(out))
+	return out
 }

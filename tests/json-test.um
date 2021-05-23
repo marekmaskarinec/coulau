@@ -1,0 +1,8 @@
+
+import (
+	"../json.um"
+)
+
+fn main() {
+	printf("%s\n", repr(json.parse("[1, {\"name\": \"Bob\", \"email\": \"bob32@gmail.com\"}, 5, 3, 5]")))
+}
