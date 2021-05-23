@@ -5,15 +5,17 @@ import (
 	"std.um" // change me for your std.um location
 )
 
-const (
+const ( // @vtereshkov please add enum :]
 	tok_opener    = 0
 	tok_closer    = 1
 	tok_colon     = 2
-	tok_str       = 3 // @vtereshkov please add enum :]
+	tok_str       = 3
 	tok_int       = 4
 	tok_real      = 5
 	tok_bool      = 6
 	tok_separator = 7
+	tok_lopener   = 8
+	tok_lcloser   = 9
 )
 
 type lexer = struct {
@@ -83,6 +85,10 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 		return token{tok_opener, l.pos, "{"}, true
 	case '}':
 		return token{tok_closer, l.pos, "}"}, true
+	case '[':
+		return token{tok_lopener, l.pos, "["}, true
+	case ']':
+		return token{tok_lcloser, l.pos, "]"}, true
 	case '"': // are ' or ` strings allowed?
 		return token{tok_str, l.pos, l.lex_str()}, true
 	case '\0':
@@ -97,6 +103,7 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 			val, is_real := l.lex_num()
 			t := tok_int
 			if is_real { t = tok_real }
+			l.pos--
 			return token{t, l.pos, first + val}, true
 		}
 
@@ -151,6 +158,9 @@ fn (l: ^lexer) parse_object(): map.Map {
 				parser_error("missing comma.")
 				printf("%s %d\n", repr(next), l.pos)
 			}
+			if next.t == tok_closer {
+				break
+			}
 			out.set(key, val)
 		}
 		t, stay = l.lex_next()
@@ -159,15 +169,42 @@ fn (l: ^lexer) parse_object(): map.Map {
 	return out
 }
 
+fn (l: ^lexer) parse_array(): []interface{} {
+	out := []interface{}{} // todo allocate before parsing
+
+	stay := true
+	t := token{}
+	for stay && t.t != tok_lcloser {
+		out = append(out, l.parse_val())
+		t, stay = l.lex_next()
+
+		if stay && (t.t != tok_separator && t.t != tok_lcloser) {
+			parser_error("array elements are not separated correctly")
+			printf("%s %d\n", repr(t), l.pos)
+			break
+		}
+	}
+
+	return out
+}
+
 fn main() {
 	l := lexer{
-		inp: "{\"name\": \"Bob\", \"email\":\"bob32@gmail.com\", \"recursion\": {\"does this work?\": 1.2}}",
+		//inp: "{\"name\": \"Bob\", \"recursion\": {\"does this work?\": 1.2}, \"email\":\"bob32@gmail.com\"}",
+		inp: "[1, {\"name\": \"Bob\", \"email\": \"bob32@gmail.com\"}, 5, 3, 5]",
 		pos: 0 }
 	
 	t, end := l.lex_next()
-	if t.t != tok_opener {
-		parser_error("json should start with an object (for now)")
-		return
+	var out: interface{}
+
+	switch (t.t) {
+	case tok_opener:
+		out = l.parse_object()
+	case tok_lopener:
+		out = l.parse_array()
+	default:
+		parser_error("top level type can only be an object or an array")
 	}
-	printf("%s\n", repr(l.parse_object()))
+
+	printf("%s\n", repr(out))
 }
