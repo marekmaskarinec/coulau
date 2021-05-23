@@ -51,6 +51,7 @@ fn (b: ^builder) write_char*(inp: char) {
 		b.increase_buffer()
 	}
 	b.buf[b.len] = inp
+	b.len++
 }
 
 // returns the content of a builder as a string

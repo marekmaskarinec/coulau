@@ -17,6 +17,8 @@
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
+import "strings.um" // for the string builder
+
 fn gettocomma(s: int, inp: str, le: ^int): str {
 	out := ""
 	i := s
@@ -27,19 +29,37 @@ fn gettocomma(s: int, inp: str, le: ^int): str {
 	return out
 }
 
+fn get_row_w(inp: str, s: int): int {
+	out := 0
+
+	for i:=s; i < len(inp) && inp[i] != '\n'; i++ {
+		if inp[i] == ',' { out++ }
+	}
+
+	return out + 1
+}
+
 // parses input csv string.
 fn parse*(inp: str): [][]str {
-	out := [][]str{}
+	var h: int
+	for i := 0; i < len(inp); i++ {
+		if inp[i] == '\n' { h++ }
+	}
+
+	out := make([][]str, h + 1)
 	var r, c: int
-	out = append(out, []str{gettocomma(0, inp, &c)})
+	out[0] = make([]str, get_row_w(inp, 0))
+	out[0][0] = gettocomma(0, inp, &c)
 	c = 1
+
 	for i:=0; i < len(inp); i++ {
 		if inp[i] == '\n' {
 			r++
 			c = 1
-			out = append(out, []str{gettocomma(i+1, inp, &i)})
+			out[r] = make([]str, get_row_w(inp, i+1))
+			out[r][0] = gettocomma(i+1, inp, &i)
 		} else if inp[i] == ',' {
-			out[r] = append(out[r], gettocomma(i+1, inp, &i))
+			out[r][c] = gettocomma(i+1, inp, &i)
 			c++
 		}
 	}
@@ -48,13 +68,13 @@ fn parse*(inp: str): [][]str {
 
 // turns 2d string array to string
 fn encode*(inp: [][]str): str {
-	out := ""
+	b := strings.mk_builder()
 	for i:=0; i < len(inp); i++ {
 		for j:=0; j < len(inp[i]); j++ {
-			out += inp[i][j]
-			if j < len(inp[i])-1 { out += "," }
+			b.write_str(inp[i][j])
+			if j < len(inp[i])-1 { b.write_char(',') }
 		}
-		out += "\n"
+		b.write_char('\n')
 	}
-	return out
+	return b.to_str()
 }

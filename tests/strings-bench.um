@@ -5,5 +5,5 @@ import (
 )
 
 fn main() {
-	strings.replace(ipsum.ips, " ", ", ")
+	strings.repeat("..", 99999)
 }

@@ -1,0 +1,173 @@
+// This is still wip and shoudn't be used.
+
+import (
+	"map.um" // change me for your map.um location
+	"std.um" // change me for your std.um location
+)
+
+const (
+	tok_opener    = 0
+	tok_closer    = 1
+	tok_colon     = 2
+	tok_str       = 3 // @vtereshkov please add enum :]
+	tok_int       = 4
+	tok_real      = 5
+	tok_bool      = 6
+	tok_separator = 7
+)
+
+type lexer = struct {
+	inp: str
+	pos: int
+}
+
+type token = struct {
+	t: int
+	pos: int // maybe add line numbers
+	value: str
+}
+
+fn (l: ^lexer) get(): char {
+	if l.pos >= len(l.inp) { return '\0' } // @vtereshkov please add EOF
+	l.pos++
+	return l.inp[l.pos-1]
+}
+
+fn (l: ^lexer) lex_str(): str {
+	out := ""
+	for true {
+		c := l.get()
+
+		if c == '"' && l.inp[l.pos-2] != '\\' { // bound check TODO
+			break
+		}
+
+		out += c
+	}
+	return out
+}
+
+fn is_num(inp: char): bool {
+	return ((inp >= '0' && inp <= '9') || inp == '.')
+}
+
+fn (l: ^lexer) lex_num(): (str, bool) {
+	out := ""
+	is_real := false
+
+	for true {
+		c := l.get()
+		if c == '.' { is_real = true }
+		if !is_num(c) { break }
+		out += c
+	}
+
+	return out, is_real 
+}
+
+fn (l: ^lexer) lex_space(): str {
+	out := ""
+	for c := l.get(); c != ' ' {
+		out += c
+	}
+	return out
+}
+
+fn (l: ^lexer) lex_next(): (token, bool) {
+	for l.pos < len(l.inp) && (l.inp[l.pos] == ' ' || l.inp[l.pos] == '\n') {
+		l.pos++
+	}
+
+	switch l.get() { // TODO: arrays
+	case '{':
+		return token{tok_opener, l.pos, "{"}, true
+	case '}':
+		return token{tok_closer, l.pos, "}"}, true
+	case '"': // are ' or ` strings allowed?
+		return token{tok_str, l.pos, l.lex_str()}, true
+	case '\0':
+		return token{}, false
+	case ':':
+		return token{tok_colon, l.pos, str(l.inp[l.pos-1])}, true
+	case ',':
+		return token{tok_separator, l.pos, str(l.inp[l.pos-1])}, true
+	default:
+		if is_num(l.inp[l.pos-1]) {
+			first := l.inp[l.pos-1]
+			val, is_real := l.lex_num()
+			t := tok_int
+			if is_real { t = tok_real }
+			return token{t, l.pos, first + val}, true
+		}
+
+		return token{tok_bool, l.pos, l.lex_space()}, true
+	}
+
+	return token{}, false
+}
+
+fn parser_error(msg: str) {
+	printf("error: %s\n", msg)
+}
+
+fn (l: ^lexer) parse_object(): map.Map
+
+fn (l: ^lexer) parse_val(): interface{} {
+	t, stay := l.lex_next()
+	switch (t.t) {
+	case tok_str:
+		return t.value
+	case tok_int:
+		return std.atoi(t.value)
+	case tok_real:
+		return std.atof(t.value)
+	case tok_opener:
+		return l.parse_object()
+	default:
+		parser_error("unsupported json feature")
+	}
+
+	return null
+}
+
+fn (l: ^lexer) parse_object(): map.Map {
+	var key: str
+	var val: interface{}
+	var out: map.Map
+	
+	// this looks horrible
+	t, stay := l.lex_next()
+	for stay && t.t != tok_closer {
+		if t.t == tok_str {
+			next, stay := l.lex_next()
+			if next.t != tok_colon {
+				parser_error("missing colon")
+				break
+			}
+			key = t.value
+			val = l.parse_val()
+			next, stay = l.lex_next()
+			if stay && next.t != tok_separator && next.t != tok_closer {
+				parser_error("missing comma.")
+				printf("%s %d\n", repr(next), l.pos)
+			}
+			out.set(key, val)
+		}
+		t, stay = l.lex_next()
+	}
+
+	return out
+}
+
+fn main() {
+	l := lexer{
+		inp: "{\"name\": \"Bob\", \"email\":\"bob32@gmail.com\", \"recursion\": {\"does this work?\": 1.2}}",
+		pos: 0 }
+	
+	t, end := l.lex_next()
+	if t.t != tok_opener {
+		parser_error("json should start with an object (for now)")
+		return
+	}
+	printf("%s\n", repr(l.parse_object()))
+}
