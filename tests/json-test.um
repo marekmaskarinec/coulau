@@ -5,7 +5,7 @@ import (
 )
 
 fn readall(f: std.File): str {
-    const blockSize = 16
+    const blockSize = 4096
     res := ""
 
     for ok := true; ok {

@@ -43,6 +43,7 @@ const ( // @vtereshkov please add enum :]
 
 type lexer = struct {
 	inp: str
+	len: int
 	pos: int
 	lineno: int
 }
@@ -54,7 +55,7 @@ type token = struct {
 }
 
 fn (l: ^lexer) get(): char {
-	if l.pos >= len(l.inp) { return '\0' } // @vtereshkov please add EOF
+	if l.pos >= l.len { return '\0' } // @vtereshkov please add EOF
 	l.pos++
 	return l.inp[l.pos-1]
 }
@@ -104,7 +105,7 @@ fn (l: ^lexer) lex_space(): str {
 }
 
 fn (l: ^lexer) lex_next(): (token, bool) {
-	for l.pos < len(l.inp) && (l.inp[l.pos] == ' ' || l.inp[l.pos] == '\n' || l.inp[l.pos] == '\t') {
+	for l.pos < l.len && (l.inp[l.pos] == ' ' || l.inp[l.pos] == '\n' || l.inp[l.pos] == '\t') {
 		if l.inp[l.pos] == '\n' {
 			l.lineno++
 		}
@@ -218,12 +219,16 @@ fn (l: ^lexer) parse_object(): map.Map {
 }
 
 fn (l: ^lexer) parse_array(): []interface{} {
-	out := []interface{}{} // todo allocate before parsing
+	out := make([]interface{}, 64) // maybe make this a setting
+	count := 0
 
 	stay := true
 	t := token{}
 	for stay && t.t != tok_lcloser {
-		out = append(out, l.parse_val())
+		if count >= len(out) - 1 {
+			out = append(out, make([]interface{}, 256))
+		}
+		out[count] = l.parse_val()
 		t, stay = l.lex_next()
 
 		if stay && (t.t != tok_separator && t.t != tok_lcloser) {
@@ -233,12 +238,12 @@ fn (l: ^lexer) parse_array(): []interface{} {
 		}
 	}
 
-	return out
+	return slice(out, 0, count)
 }
 
 // parser json provided as an input and returns either map.Map or []interface{}
 fn parse*(inp: str): interface{} {
-	l := lexer{inp, 0, 0}
+	l := lexer{inp, len(inp), 0, 1}
 
 	t, end := l.lex_next()
 	var out: interface{}
