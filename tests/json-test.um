@@ -1,8 +1,27 @@
 
 import (
 	"../json.um"
+	"../std.um"
 )
 
+fn readall(f: std.File): str {
+    const blockSize = 16
+    res := ""
+
+    for ok := true; ok {
+	    var buff: [blockSize + 1]char
+	    ok = std.fread(f, ^[blockSize]char(&buff)) == 1
+	    res += str([]char(buff))
+    }
+
+    return res
+}
+
 fn main() {
-	printf("%s\n", repr(json.parse("[1, {\"name\": \"Bob\", \"email\": \"bob32@gmail.com\"}, 5, 3, 5]")))
+	//printf("%s\n", repr(json.parse("[1, {\"name\": \"Bob\", \"email\": \"bob32@gmail.com\"}, 5, 3, 5]")))
+
+	f := std.fopen("bench.json", "r")
+	inp := readall(f)
+	printf("read file\n")
+	json.parse(inp)
 }

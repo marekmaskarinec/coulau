@@ -1,21 +1,26 @@
-//////////////////////////////////////////////////////////////
-//                                                          //
-// json.um - public domain json parser for umka             //
-// by Marek Maskarinec                                      //
-// https://github.com/marekmaskarinec/libs                  //
-//                                                          //
-// How to use:                                              //
-//   First you need to replace map.um and std.um            //
-//   for the location, where you have them. Then            //
-//   you can use the parse function. It takes a             //
-//   string for input and returns an interface.             //
-//   The interface is either []interface{}, or              //
-//   map.Map.                                               //
-//                                                          //
-// TODO:                                                    //
-//   Benchmark this.                                        //
-//                                                          //
-//////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+//                                                   //
+// json.um - public domain json parser for umka      //
+// by Marek Maskarinec                               //
+// https://github.com/marekmaskarinec/libs           //
+//                                                   //
+// How to use:                                       //
+//   First you need to replace map.um and std.um     //
+//   for the location, where you have them. Then     //
+//   you can use the parse function. It takes a      //
+//   string for input and returns an interface.      //
+//   The interface is either []interface{}, or       //
+//   map.Map.                                        //
+//                                                   //
+// TODO:                                             //
+//   improve performance                             //
+//                                                   //
+// Disclaimer:                                       //
+//   this doesn't adhere to json specs perfectly and //
+//   check for errors much. Please pass it correct   //
+//   json :]                                         //
+//                                                   //
+///////////////////////////////////////////////////////
 
 import (
 	"map.um" // change me for your map.um location
@@ -23,26 +28,28 @@ import (
 )
 
 const ( // @vtereshkov please add enum :]
-	tok_opener    = 0
-	tok_closer    = 1
-	tok_colon     = 2
-	tok_str       = 3
-	tok_int       = 4
-	tok_real      = 5
-	tok_bool      = 6
-	tok_separator = 7
-	tok_lopener   = 8
-	tok_lcloser   = 9
+	tok_null      = 0
+	tok_opener    = 1
+	tok_closer    = 2
+	tok_colon     = 3
+	tok_str       = 4
+	tok_int       = 5
+	tok_real      = 6
+	tok_const     = 7
+	tok_separator = 8
+	tok_lopener   = 9
+	tok_lcloser   = 10
 )
 
 type lexer = struct {
 	inp: str
 	pos: int
+	lineno: int
 }
 
 type token = struct {
 	t: int
-	pos: int // maybe add line numbers
+	pos: int
 	value: str
 }
 
@@ -86,14 +93,21 @@ fn (l: ^lexer) lex_num(): (str, bool) {
 
 fn (l: ^lexer) lex_space(): str {
 	out := ""
-	for c := l.get(); c != ' ' {
+	l.pos--
+	c := l.get()
+	for c != ' ' && c != '}' && c != ']' && c != '\n' && c != ',' {
 		out += c
+		c = l.get()
 	}
+	l.pos--
 	return out
 }
 
 fn (l: ^lexer) lex_next(): (token, bool) {
-	for l.pos < len(l.inp) && (l.inp[l.pos] == ' ' || l.inp[l.pos] == '\n') {
+	for l.pos < len(l.inp) && (l.inp[l.pos] == ' ' || l.inp[l.pos] == '\n' || l.inp[l.pos] == '\t') {
+		if l.inp[l.pos] == '\n' {
+			l.lineno++
+		}
 		l.pos++
 	}
 
@@ -115,7 +129,7 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 	case ',':
 		return token{tok_separator, l.pos, str(l.inp[l.pos-1])}, true
 	default:
-		if is_num(l.inp[l.pos-1]) {
+		if is_num(l.inp[l.pos-1]) || l.inp[l.pos-1] == '-' {
 			first := l.inp[l.pos-1]
 			val, is_real := l.lex_num()
 			t := tok_int
@@ -124,7 +138,12 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 			return token{t, l.pos, first + val}, true
 		}
 
-		return token{tok_bool, l.pos, l.lex_space()}, true
+		val := l.lex_space()
+		if val == "true" || val == "false" || val == "null" {
+			return token{tok_const, l.pos, val}, true
+		}
+
+		return token{}, true
 	}
 
 	return token{}, false
@@ -135,6 +154,7 @@ fn parser_error(msg: str) {
 }
 
 fn (l: ^lexer) parse_object(): map.Map
+fn (l: ^lexer) parse_array(): []interface{}
 
 fn (l: ^lexer) parse_val(): interface{} {
 	t, stay := l.lex_next()
@@ -147,8 +167,19 @@ fn (l: ^lexer) parse_val(): interface{} {
 		return std.atof(t.value)
 	case tok_opener:
 		return l.parse_object()
+	case tok_lopener:
+		return l.parse_array()
+	case tok_const:
+		if t.value == "true" {
+			return true
+		} else if t.value == "false" {
+			return false
+		} else if t.value == "null" {
+			return null
+		}
 	default:
 		parser_error("unsupported json feature")
+		printf("%s %d\n", repr(t), l.lineno)
 	}
 
 	return null
@@ -173,7 +204,7 @@ fn (l: ^lexer) parse_object(): map.Map {
 			next, stay = l.lex_next()
 			if stay && next.t != tok_separator && next.t != tok_closer {
 				parser_error("missing comma.")
-				printf("%s %d\n", repr(next), l.pos)
+				printf("%s %d\n", repr(next), l.lineno)
 			}
 			if next.t == tok_closer {
 				break
@@ -197,7 +228,7 @@ fn (l: ^lexer) parse_array(): []interface{} {
 
 		if stay && (t.t != tok_separator && t.t != tok_lcloser) {
 			parser_error("array elements are not separated correctly")
-			printf("%s %d\n", repr(t), l.pos)
+			printf("%s %d\n", repr(t), l.lineno)
 			break
 		}
 	}
@@ -207,7 +238,7 @@ fn (l: ^lexer) parse_array(): []interface{} {
 
 // parser json provided as an input and returns either map.Map or []interface{}
 fn parse*(inp: str): interface{} {
-	l := lexer{inp, 0}
+	l := lexer{inp, 0, 0}
 
 	t, end := l.lex_next()
 	var out: interface{}
