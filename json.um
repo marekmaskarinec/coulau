@@ -61,15 +61,24 @@ fn (l: ^lexer) get(): char {
 }
 
 fn (l: ^lexer) lex_str(): str {
-	out := ""
+	const STEP = 64
+	out := make([]char, STEP)
+	buflen := STEP
+	start := l.pos
 	for true {
-		c := l.get()
+		c := l.inp[l.pos]
+		l.pos++
 
 		if l.pos > 1 && c == '"' && l.inp[l.pos-2] != '\\' {
 			break
 		}
 
-		out += c
+		if l.pos-start >= buflen {
+			out = append(out, make([]char, STEP * 4))
+			buflen += STEP * 4
+		}
+
+		out[l.pos-start-1] = c
 	}
 	return out
 }
@@ -229,6 +238,7 @@ fn (l: ^lexer) parse_array(): []interface{} {
 			out = append(out, make([]interface{}, 256))
 		}
 		out[count] = l.parse_val()
+		count++
 		t, stay = l.lex_next()
 
 		if stay && (t.t != tok_separator && t.t != tok_lcloser) {
