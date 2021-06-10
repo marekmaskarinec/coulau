@@ -27,18 +27,18 @@ import (
 	"std.um" // change me for your std.um location
 )
 
-const ( // @vtereshkov please add enum :]
-	tok_null      = 0
-	tok_opener    = 1
-	tok_closer    = 2
-	tok_colon     = 3
-	tok_str       = 4
-	tok_int       = 5
-	tok_real      = 6
-	tok_const     = 7
-	tok_separator = 8
-	tok_lopener   = 9
-	tok_lcloser   = 10
+const (
+	tok_null = 0
+	tok_opener
+	tok_closer
+	tok_colon
+	tok_str
+	tok_int
+	tok_real
+	tok_const
+	tok_separator
+	tok_lopener
+	tok_lcloser
 )
 
 type lexer = struct {
@@ -55,7 +55,7 @@ type token = struct {
 }
 
 fn (l: ^lexer) get(): char {
-	if l.pos >= l.len { return '\0' } // @vtereshkov please add EOF
+	if l.pos >= l.len { return '\0' }
 	l.pos++
 	return l.inp[l.pos-1]
 }
@@ -105,7 +105,7 @@ fn (l: ^lexer) lex_space(): str {
 	out := ""
 	l.pos--
 	c := l.get()
-	for c != ' ' && c != '}' && c != ']' && c != '\n' && c != ',' {
+	for c != ' ' && c != '}' && c != ']' && c != '\n' && c != ',' && c != '\t' {
 		out += c
 		c = l.get()
 	}
@@ -139,7 +139,7 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 	case ',':
 		return token{tok_separator, l.pos, str(l.inp[l.pos-1])}, true
 	default:
-		if is_num(l.inp[l.pos-1]) || l.inp[l.pos-1] == '-' {
+		if l.inp[l.pos-1] == '-' || is_num(l.inp[l.pos-1]) {
 			first := l.inp[l.pos-1]
 			val, is_real := l.lex_num()
 			t := tok_int
@@ -149,11 +149,7 @@ fn (l: ^lexer) lex_next(): (token, bool) {
 		}
 
 		val := l.lex_space()
-		if val == "true" || val == "false" || val == "null" {
-			return token{tok_const, l.pos, val}, true
-		}
-
-		return token{}, true
+		return token{tok_const, l.pos, val}, true
 	}
 
 	return token{}, false
@@ -186,6 +182,8 @@ fn (l: ^lexer) parse_val(): interface{} {
 			return false
 		} else if t.value == "null" {
 			return null
+		} else {
+			parser_error("unknonw constant")
 		}
 	default:
 		parser_error("unsupported json feature")
@@ -229,13 +227,14 @@ fn (l: ^lexer) parse_object(): map.Map {
 
 fn (l: ^lexer) parse_array(): []interface{} {
 	out := make([]interface{}, 64) // maybe make this a setting
+	appender := make([]interface{}, 256)
 	count := 0
 
 	stay := true
 	t := token{}
 	for stay && t.t != tok_lcloser {
 		if count >= len(out) - 1 {
-			out = append(out, make([]interface{}, 256))
+			out = append(out, appender)
 		}
 		out[count] = l.parse_val()
 		count++
