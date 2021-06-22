@@ -1,0 +1,203 @@
+
+import (
+	"strings.um"
+	"std.um"
+)
+
+var (
+	ignore_unexported: bool
+	do_header: bool
+	url: str
+	out_dir: str
+)
+
+type Element = interface {
+	to_markdown(): str
+}
+
+type Function = struct {
+	prototype: str
+	docs: str
+	name: str
+}
+
+type Type = struct {
+	is_interface: bool
+	name: str
+	docs: str
+	body: str
+}
+
+fn (f: ^Function) to_markdown(): str {
+	return "## fn " + f.name + "\n" + "`" + f.prototype + "`\n\n" + f.docs + "\n"
+}
+
+fn (t: ^Type) to_markdown(): str {
+	out := strings.mk_builder()
+	out.write_str("## ")
+
+	if t.is_interface {
+		out.write_str("interface ")
+	} else {
+		out.write_str("struct ")
+	}
+	
+	out.write_str(t.name + "\n```go\n" + t.body + "```\n\n" + t.docs + "\n")
+
+	return out.to_str()
+}
+
+fn readall(f: std.File): str {
+    const blockSize = 16
+    res := ""
+
+    for ok := true; ok {
+	    var buff: [blockSize + 1]char
+	    ok = std.fread(f, ^[blockSize]char(&buff)) == 1
+	    res += str([]char(buff))
+    }
+
+    return res
+}
+
+fn get_docs(inp: []str, start: int): str {
+	doc_end := start
+	for j:=start-1;
+		j >= 0 &&
+		len(inp[j]) > 2 &&
+		inp[j][0] == '/' && inp[j][0] == '/';
+		j-- {
+		doc_end = j
+	}
+
+	docs := ""
+	for s in slice(inp, doc_end, start) {
+		docs += strings.trimspaces(strings.trimprefix(s, "//")) + "\n"
+	}
+
+	return docs
+}
+
+fn get_elements(inp: str): []Element {
+	split := strings.split(inp, "\n")
+
+	out := []Element{}
+
+	for i, s in split {
+		toks := strings.split(strings.trimspaces(split[i]), " ")
+		
+		if len(toks) == 0 {
+			continue
+		}
+
+		if toks[0] == "fn" {
+			docs := get_docs(split, i)
+
+			prototype := strings.split(split[i], "{")[0]
+			prototype = strings.trimspaces(prototype)
+
+			if ignore_unexported && !strings.contains(prototype, "*") {
+				continue
+			}
+
+			name_pos := 1
+			if toks[1][0] == '(' {
+				name_pos = 3
+			}
+
+			name := strings.trimsuffix(strings.split(toks[name_pos], "(")[0], "*")
+
+			out = append(out, Function{prototype, docs, name})
+		}
+
+		if toks[0] == "type" && len(toks) >= 4 && toks[1] != "(" {
+			docs := get_docs(split, i)
+
+			is_interface := false
+			if toks[3] == "interface" {
+				is_interface = true
+			}
+
+			name := toks[1]
+
+			if ignore_unexported && !strings.contains(name, "*") {
+				continue
+			}
+
+			body := ""
+
+			for j:=i; j < len(split) && split[j-1] != '}'; j++ {
+				body += split[j] + "\n"
+			}
+
+			out = append(out, Type{is_interface, name, docs, body})
+		}
+	}
+
+	return out
+}
+
+fn get_header(inp: str): str {
+	split := strings.split(inp, "\n")
+	out := strings.mk_builder()
+
+	for i:=0;
+		i < len(split) &&
+		len(split[i]) > 2 &&
+		split[i][0] == '/' && split[i][1] == '/';
+		i++ {
+		out.write_str(strings.trimprefix(split[i], "//") + "\n")
+	}
+
+	return strings.replace("```\n" + out.to_str() + "```\n\n", "/", "")
+}
+
+fn main() {
+	files := []str{}
+	for i:=1; i < std.argc(); i++ {
+		if std.argv(i)[0] == '-' {
+			if len(std.argv(i)) == 1 {
+				continue
+			}
+
+			switch std.argv(i)[1] {
+			case 'i':
+				ignore_unexported = true
+			case 'u':
+				url = std.argv(i+1)
+				i++
+			case 'o':
+				out_dir = std.argv(i+1)
+				i++
+			case 'h':
+				do_header = true
+			}
+		} else {
+			files = append(files, std.argv(i))
+		}
+	}
+
+	for p in files {
+		f := std.fopen(p, "r")
+
+		inp := readall(f)
+
+		out := strings.mk_builder()
+		out.write_str("# " + p + "\n\n")
+
+		if do_header {
+			out.write_str(get_header(inp))
+		}
+
+		els := get_elements(inp)
+		std.fclose(f)
+
+		for e in els {
+			out.write_str(e.to_markdown() + "\n")
+		}
+
+		f = std.fopen(out_dir + "/" + p + ".md", "w")
+		std.fprintln(f, out.to_str())
+		std.fclose(f)
+	}
+}

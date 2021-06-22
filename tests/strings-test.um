@@ -30,10 +30,6 @@ fn main() {
 	std.println("--trimspaces------------")
 	std.println("strings.trimspaces(\"  there are some whitespaces  \") => " + strings.trimspaces("  there are some whitespaces  "))
 
-	std.println("--trimprefix------------")
-	std.println("strings.trimprefix(\"geese are evil and should be cut\", \"geese \") => " + strings.trimprefix("geese are evil and should be cut", "geese "))
-	std.println("strings.trimprefix(\"gese are evil and should be cut\", \"geese \") => " + strings.trimprefix("gese are evil and should be cut", "geese "))
-
 	std.println("--trimsuffix------------")
 	std.println("strings.trimsuffix(\"strings.um\", \".um\") => " + strings.trimsuffix("strings.um", ".um"))
 }
