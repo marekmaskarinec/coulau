@@ -12,8 +12,8 @@
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-// builder allows for faster string addition.
 const BUILDER_STEP = 1024
+// builder allows for faster string addition.
 type builder* = struct {
 	len: int
 	buf: []char

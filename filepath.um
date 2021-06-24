@@ -57,7 +57,7 @@ fn dir*(inp: str): str {
 	}
 
 	if !chcont(inp, fileseparator) {
-		return "."
+		return ""
 	}
 
 	ln := 0

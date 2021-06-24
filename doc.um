@@ -4,15 +4,22 @@ import (
 	"std.um"
 )
 
+const (
+	term = 0
+	markdown	
+)
+
 var (
 	ignore_unexported: bool
 	do_header: bool
-	url: str
-	out_dir: str
+	url: str = ""
+	out_dir: str = ""
+	out_type: int
 )
 
 type Element = interface {
 	to_markdown(): str
+	to_term(): str
 }
 
 type Function = struct {
@@ -30,6 +37,25 @@ type Type = struct {
 
 fn (f: ^Function) to_markdown(): str {
 	return "## fn " + f.name + "\n" + "`" + f.prototype + "`\n\n" + f.docs + "\n"
+}
+
+fn (f: ^Function) to_term(): str {
+	return "\x1b[1mfn " + f.name + "\x1b[0m\n\x1b[3m" + f.prototype + "\x1b[0m\n\n" + f.docs + "\n"
+}
+
+fn (t: ^Type) to_term(): str {
+	out := strings.mk_builder()
+	out.write_str("\x1b[1m")
+
+	if t.is_interface {
+		out.write_str("interface ")
+	} else {
+		out.write_str("struct ")
+	}
+
+	out.write_str(t.name + "\x1b[0m\n\x1b[3m" + t.body + "\n\n\x1b[0m" + t.docs + "\n")
+
+	return out.to_str()
 }
 
 fn (t: ^Type) to_markdown(): str {
@@ -105,7 +131,7 @@ fn get_elements(inp: str): []Element {
 				name_pos = 3
 			}
 
-			name := strings.trimsuffix(strings.split(toks[name_pos], "(")[0], "*")
+			name := strings.split(toks[name_pos], "(")[0]
 
 			out = append(out, Function{prototype, docs, name})
 		}
@@ -152,7 +178,25 @@ fn get_header(inp: str): str {
 	return strings.replace("```\n" + out.to_str() + "```\n\n", "/", "")
 }
 
+fn help() {
+	printf("automatic documentation for umka\n")
+	printf("by Marek Maskarinec\n")
+	printf("How to use:\n")
+	printf("  Leave comments above functions and type definitions.\n")
+	printf("  Then pass files to this command to be documented.\n")
+	printf("Flags:\n")
+	printf("  -i: ignore unexported\n")
+	printf("  -o: define output directory\n")
+	printf("  -r: include header from a file\n")
+	printf("  -m: export to markdown (terminal view by default)\n")
+	printf("  -h: show this help\n")
+}
+
 fn main() {
+	if std.argc() == 1 {
+		help()
+	}
+
 	files := []str{}
 	for i:=1; i < std.argc(); i++ {
 		if std.argv(i)[0] == '-' {
@@ -167,10 +211,16 @@ fn main() {
 				url = std.argv(i+1)
 				i++
 			case 'o':
-				out_dir = std.argv(i+1)
+				out_dir = std.argv(i+1) + "/"
 				i++
-			case 'h':
+			case 'r':
 				do_header = true
+			case 'm':
+				out_type = markdown
+			case 'h':
+				help()
+			default:
+				help()
 			}
 		} else {
 			files = append(files, std.argv(i))
@@ -181,23 +231,29 @@ fn main() {
 		f := std.fopen(p, "r")
 
 		inp := readall(f)
-
-		out := strings.mk_builder()
-		out.write_str("# " + p + "\n\n")
-
-		if do_header {
-			out.write_str(get_header(inp))
-		}
-
 		els := get_elements(inp)
 		std.fclose(f)
 
-		for e in els {
-			out.write_str(e.to_markdown() + "\n")
+		switch out_type {
+		case markdown:
+			out := strings.mk_builder()
+			out.write_str("# " + p + "\n\n")
+      
+			if do_header {
+				out.write_str(get_header(inp))
+			}
+      
+			for e in els {
+				out.write_str(e.to_markdown() + "\n")
+			}
+      
+			f = std.fopen(out_dir + p + ".md", "w")
+			std.fprintln(f, out.to_str())
+			std.fclose(f)
+		case term:
+			for e in els {
+				printf("%s\n", e.to_term())
+			}
 		}
-
-		f = std.fopen(out_dir + "/" + p + ".md", "w")
-		std.fprintln(f, out.to_str())
-		std.fclose(f)
 	}
 }
