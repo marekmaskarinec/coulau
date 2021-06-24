@@ -1,0 +1,37 @@
+Collection of public domain libraries and utilities for umka. Documentation can be found in the doc folder.
+
+Current libs:
+	csv.um - csv parser + encoder
+		- working
+		- quite slow
+		- depends on strings.um
+
+	doc.um - automatic documentation generator
+		- working
+		- only markdown output rn
+		- depends on std.um and strings.um
+
+	farbfeld.um - farbfeld decoder and encoder
+		- working
+		- slow (i know of a fix)
+		- depends on std.um
+
+	filepath.um - platform independant path operation
+		- woking on unix-like systems and windows
+		- depends on std.um
+
+	json.um - json parser
+		- works
+		- slow (I have no idea, how to speed it up)
+		- depends on map.um and std.um
+
+	strings.um - string operation library + string builder
+		- works except for some corner cases (please report bugs)
+		- quite fast
+		- no deps
+
+	umka2bin.um - converts umka scripts to native library
+		- doesn't work, when imports are from different directory (will be fixed soon)
+		- depends on std.um and strings.um
+		- you still need a compiler, umka_api.h and libumka.a
+
