@@ -110,13 +110,14 @@ fn _replace(inp, pattern, repl: str): []str {
 			if ilen < i + len(pattern) { return tr }
 
 			if slice(inp, i, i + len(pattern)) == pattern {
-				tr[trc] = sslice(inp, lsplit + 1 , i - len(pattern))
+				tr[trc] = sslice(inp, lsplit + 1 , i - len(pattern) + 1)
 				trc++
 				if repl != "" {
 					tr[trc] = repl
 					trc++
 				}
-				lsplit = i
+				i += len(pattern)
+				lsplit = i + 1
 			}
 		}
 	}
