@@ -162,8 +162,7 @@ fn parser_error(msg: str) {
 fn (l: ^lexer) parse_object(): map.Map
 fn (l: ^lexer) parse_array(): []interface{}
 
-fn (l: ^lexer) parse_val(): interface{} {
-	t, stay := l.lex_next()
+fn (l: ^lexer) parse_val(t: token): interface{} {
 	switch (t.t) {
 	case tok_str:
 		return t.value
@@ -208,16 +207,17 @@ fn (l: ^lexer) parse_object(): map.Map {
 				break
 			}
 			key = t.value
-			val = l.parse_val()
+			next, stay = l.lex_next()
+			val = l.parse_val(next)
 			next, stay = l.lex_next()
 			if stay && next.t != tok_separator && next.t != tok_closer {
 				parser_error("missing comma.")
 				printf("%s %d\n", repr(next), l.lineno)
 			}
+			out.set(key, val)
 			if next.t == tok_closer {
 				break
 			}
-			out.set(key, val)
 		}
 		t, stay = l.lex_next()
 	}
@@ -236,7 +236,12 @@ fn (l: ^lexer) parse_array(): []interface{} {
 		if count >= len(out) - 1 {
 			out = append(out, appender)
 		}
-		out[count] = l.parse_val()
+		t, stay = l.lex_next()
+		if t.t == tok_lcloser {
+			break
+		}
+
+		out[count] = l.parse_val(t)
 		count++
 		t, stay = l.lex_next()
 
