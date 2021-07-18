@@ -13,43 +13,31 @@
 
 ```
 
-## fn init
-`fn init()`
-
-initializes platform specific stuff
-
-
-## fn chcont
-`fn chcont(inp: str, c: char): bool`
-
-checks, if string contains a char
-
-
-## fn dir
+## fn dir*
 `fn dir*(inp: str): str`
 
 returns the directory in inp
 
 
-## fn ext
+## fn ext*
 `fn ext*(inp: str): str`
 
 returns the extension of file inp. if there is no extension, or it is a diroctory, output is ""
 
 
-## fn fromslash
+## fn fromslash*
 `fn fromslash*(inp: str): str`
 
 converts / to platform specific separator
 
 
-## fn toslash
+## fn toslash*
 `fn toslash*(inp: str) : str`
 
 converts platform specific separator to /
 
 
-## fn split
+## fn split*
 `fn split*(inp: str): (str, str)`
 
 returns the direcory and file of inp. if inp is a folder, it return "" as a file

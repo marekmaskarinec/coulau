@@ -1,5 +1,21 @@
 # strings.um
 
+```
+
+                                                                  
+ strings.um - public domain string manipulation library for umka  
+ by Marek Maskarinec                                              
+ https:github.commarekmaskarineclibs                          
+                                                                  
+ How to use:                                                      
+   just import this.                                              
+                                                                  
+ TODO:                                                            
+  - increase performance                                          
+                                                                  
+
+```
+
 ## struct builder*
 ```go
 type builder* = struct {
@@ -8,18 +24,13 @@ type builder* = struct {
 }
 ```
 
+builder allows for faster string addition.
 
 
 ## fn mk_builder*
 `fn mk_builder*(): builder`
 
 creates an allocated builder
-
-
-## fn increase_buffer
-`fn (b: ^builder) increase_buffer()`
-
-increases buffer size
 
 
 ## fn write_str*
@@ -58,11 +69,6 @@ returns true, if string is contained in another string
 joins an array of string into one and adds a joiner between them
 
 
-## fn _replace
-`fn _replace(inp, pattern, repl: str): []str`
-
-
-
 ## fn replace*
 `fn replace*(inp, pattern, replacer: str): str`
 
@@ -75,20 +81,10 @@ replaces an pattern with a string
 splits a string, every time a pattern occurs. it deletes it (equivalent to replace(s, pattern, ""))
 
 
-## fn chartoupper
-`fn chartoupper(inp: char): char`
-
-
-
 ## fn toupper*
 `fn toupper*(inp: str): str`
 
 returns the same string, but characters are upper case
-
-
-## fn chartolower
-`fn chartolower(inp: char): char`
-
 
 
 ## fn tolower*

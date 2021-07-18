@@ -1,0 +1,11 @@
+
+type (
+	Any* = interface{}
+	Node* = struct {
+		val: Any
+		Next: ^Node
+		Prev: ^Node
+	}
+)
+
+

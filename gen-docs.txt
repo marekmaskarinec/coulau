@@ -1,0 +1,1 @@
+umka doc.um *.um -i -o doc -r -m

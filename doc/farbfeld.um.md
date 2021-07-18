@@ -30,40 +30,25 @@
 
 ```
 
-## fn peekstr
-`fn peekstr(f: std.File, next: int): str`
-
-
-
-## fn peekn
-`fn peekn(f: std.File, next: int): int`
-
-
-
-## fn load
+## fn load*
 `fn load*(path: str): ([]uint32, int, int, int)`
 
 loads image at path
 
 
-## fn tbend
-`fn tbend(inp: uint32): uint32`
-
-
-
-## fn pixelsplit
+## fn pixelsplit*
 `fn pixelsplit*(inp: uint32): (uint8, uint8, uint8, uint8)`
 
 splits a pixel into 4 uint8s
 
 
-## fn pixelmerge
+## fn pixelmerge*
 `fn pixelmerge*(r, g, b, a: uint8): uint32`
 
 merges r, g, b and a values into one
 
 
-## fn write
+## fn write*
 `fn write*(path: str, data: []uint32, w: int): int`
 
 writes a farbfeld file from data. w is width of the image

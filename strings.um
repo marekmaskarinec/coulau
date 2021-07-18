@@ -186,9 +186,17 @@ fn trimspaces*(inp: str): str {
 		start++
 	}
 
+	if start >= len(inp) {
+		return ""
+	}
+
 	end = len(inp)-1
 	for end >= 0 && inp[end] == ' ' {
 		end--
+	}
+
+	if end > len(inp) {
+		end = len(inp)
 	}
 
 	return slice(inp, start, end+1)

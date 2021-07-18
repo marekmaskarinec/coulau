@@ -1,0 +1,48 @@
+
+type test_fn = fn(a, b: interface{}): bool
+
+fn merge(arr1, arr2: []interface{}, sortFn: test_fn): []interface{} {
+	out := make([]interface{}, len(arr1) + len(arr2))
+	outc := 0
+
+	off1 := 0
+	off2 := 0
+
+	for off1 < len(arr1) && off2 < len(arr2) {
+		if sortFn(arr1[off1], arr2[off2]) {
+			out[outc] = arr1[off1]
+			off1++
+			outc++
+		} else {
+			out[outc] = arr2[off2]
+			outc++
+			off2++
+		}
+	}
+
+	for off1 < len(arr1) {
+		out[outc] = arr1[off1]
+		outc++
+		off1++
+	}
+
+	for off2 < len(arr2) {
+		out[outc] = arr2[off2]
+		outc++
+		off2++
+	}
+
+	return out
+}
+
+// Sorts arr using mergesort. **UNSTABLE**
+fn mergesort*(arr: []interface{}, sortFn: test_fn): []interface{} {
+	if len(arr) < 2 {
+		return arr
+	}
+
+	mid := len(arr) / 2
+
+	return merge(mergesort(slice(arr, 0, mid), sortFn), mergesort(slice(arr, mid, len(arr)), sortFn), sortFn)
+}
+

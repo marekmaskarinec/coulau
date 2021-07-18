@@ -1,0 +1,19 @@
+
+import (
+	"../sort.um"
+)
+
+fn main() {
+	num_arr := []interface{}{4, 5, 5, 6, 7, 4, 2, 5}
+
+	printf("basic sort:\n")
+	printf("\t%s=> %s\n", repr(num_arr), repr(sort.mergesort(num_arr, fn(a, b: interface{}): bool {
+		return ^int(a)^ > ^int(b)^
+	})))
+
+	printf("stability:\n")
+	str_arr := []interface{}{"string1", "str1", "string2", "string3", "str2"}
+	printf("\t%s=> %s\n", repr(str_arr), repr(sort.mergesort(str_arr, fn(a, b: interface{}): bool {
+		return len(^str(a)^) > len(^str(b)^)
+	})))
+}
