@@ -1,7 +1,10 @@
 
-type test_fn = fn(a, b: interface{}): bool
+type (
+	TestFn = fn(a, b: interface{}): bool
+	Any = interface{}
+)
 
-fn merge(arr1, arr2: []interface{}, sortFn: test_fn): []interface{} {
+fn merge(arr1, arr2: []Any, sortFn: TestFn): []Any {
 	out := make([]interface{}, len(arr1) + len(arr2))
 	outc := 0
 
@@ -36,7 +39,7 @@ fn merge(arr1, arr2: []interface{}, sortFn: test_fn): []interface{} {
 }
 
 // Sorts arr using mergesort. **UNSTABLE**
-fn mergesort*(arr: []interface{}, sortFn: test_fn): []interface{} {
+fn mergesort*(arr: []Any, sortFn: TestFn): []Any {
 	if len(arr) < 2 {
 		return arr
 	}

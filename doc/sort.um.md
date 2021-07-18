@@ -4,7 +4,7 @@
 ```
 
 ## fn mergesort*
-`fn mergesort*(arr: []interface`
+`fn mergesort*(arr: []Any, sortFn: TestFn): []Any`
 
 Sorts arr using mergesort. **UNSTABLE**
 
