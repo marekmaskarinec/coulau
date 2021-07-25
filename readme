@@ -17,7 +17,7 @@ Current libs:
 		- depends on std.um
 
 	filepath.um - platform independant path operation
-		- woking on unix-like systems and windows
+		- works on unix-like systems and windows
 		- depends on std.um
 
 	json.um - json parser
@@ -26,7 +26,7 @@ Current libs:
 		- depends on map.um and std.um
 
 	strings.um - string operation library + string builder
-		- works except for some corner cases (please report bugs)
+		- works except for some off-by-one errors
 		- quite fast
 		- no deps
 
@@ -34,4 +34,7 @@ Current libs:
 		- doesn't work, when imports are from different directory (will be fixed soon)
 		- depends on std.um and strings.um
 		- you still need a compiler, umka_api.h and libumka.a
+		- use aup instead of this
+	list.um - list implementation
+		- works
 
