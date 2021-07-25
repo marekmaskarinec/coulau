@@ -1,0 +1,26 @@
+
+import (
+	"../list.um"
+)
+
+fn main() {
+	l := list.List{}
+
+	printf("%s\n", l.to_str())	
+	l.push_front(2)
+	printf("%s\n", l.to_str())	
+	l.push_back(4)
+	printf("%s\n", l.to_str())
+	l.insert_after(l.front, 3)
+	l.push_front(1)
+	printf("%s\n", l.to_str())	
+	l.remove(l.back)
+	printf("%s\n", l.to_str())	
+
+	a := l.to_arr()
+	printf("%s\n", l.to_str())	
+	l = list.from_arr(a)
+	printf("%s\n", l.to_str())	
+
+	printf("endend with length: %d\n", l.length)
+}
