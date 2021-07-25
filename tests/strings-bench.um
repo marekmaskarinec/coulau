@@ -1,9 +1,0 @@
-
-import (
-	"../strings.um"
-	"ipsum.um"
-)
-
-fn main() {
-	strings.repeat("..", 99999)
-}
