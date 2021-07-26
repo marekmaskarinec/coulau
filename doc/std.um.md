@@ -6,35 +6,7 @@
 
 ## struct File*
 ```go
-type File* = ^struct {}
-
-const (
-    seekBegin* = 0
-    seekCur*   = 1
-    seekEnd*   = 2
-)    
-
-fn rtlfopen  (name: str, mode: str): File;  
-fn fopen*    (name: str, mode: str): File {return rtlfopen(name, mode)}
-
-fn rtlfclose (f: File): int
-fn fclose*   (f: File): int {return rtlfclose(f)}
-
-fn rtlfread(buf: ^void, size, cnt: int, f: File): int
-
-fn fread*(f: File, buf: interface{}): int {
-    if f == null {
-        error("File is null")
-    }
-    if bytes := ^[]uint8(buf); bytes != null {
-        return rtlfread(&bytes[0], len(bytes^), 1, f)
-    }
-    if selfhasptr(buf) {
-        error("Cannot read reference types except ^[]uint8")
-    }
-    return rtlfread(buf.__self, sizeofself(buf), 1, f)
-}
-```
+type File* = ^struct {}```
 
 
 

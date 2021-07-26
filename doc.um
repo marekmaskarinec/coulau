@@ -151,9 +151,12 @@ fn get_elements(inp: str): []Element {
 			}
 
 			body := ""
-
-			for j:=i; j < len(split) && split[j-1] != '}'; j++ {
-				body += split[j] + "\n"
+			if strings.contains(split[i], "}") {
+				body = split[i]
+			} else {
+				for j:=i; j < len(split) && split[j-1] != '}'; j++ {
+					body += split[j] + "\n"
+				}
 			}
 
 			out = append(out, Type{is_interface, name, docs, body})

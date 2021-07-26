@@ -24,7 +24,7 @@ type Any* = interface{
 type Node* = struct {
 		value: Any
 		next: ^Node
-		prev: ^Node
+		prev: weak ^Node // cast to ^Node before using
 }
 ```
 
@@ -57,7 +57,6 @@ add value to the end of the list
 `fn (l: ^List) insert_after*(a: ^Node, value: Any)`
 
 insert value after a
-TODO: this causes a memory leak warning (bug in umka?)
 
 
 ## fn from_arr*

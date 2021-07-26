@@ -15,7 +15,7 @@ type Any* = interface{
 type Node* = struct {
 		value: Any
 		next: ^Node
-		prev: ^Node
+		prev: weak ^Node // cast to ^Node before using
 }
 
 type List* = struct {
@@ -58,7 +58,6 @@ fn (l: ^List) push_back*(value: Any) {
 }
 
 // insert value after a
-// TODO: this causes a memory leak warning (bug in umka?)
 fn (l: ^List) insert_after*(a: ^Node, value: Any) {
 	n := new(Node)
 
@@ -124,7 +123,7 @@ fn (l: ^List) remove*(n: ^Node) {
 		l.back = n.prev
 	}
 
-	n.prev.next = n.next
+	^Node(n.prev).next = n.next
 }
 
 fn (l: ^List) to_str*(): str {
