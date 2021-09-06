@@ -7,6 +7,7 @@ import (
 const (
 	term = 0
 	markdown	
+	txt
 )
 
 var (
@@ -15,11 +16,13 @@ var (
 	url: str = ""
 	out_dir: str = ""
 	out_type: int
+	txt_header: str
 )
 
 type Element = interface {
 	to_markdown(): str
 	to_term(): str
+	to_txt(): str
 }
 
 type Function = struct {
@@ -43,6 +46,10 @@ fn (f: ^Function) to_term(): str {
 	return "\x1b[1mfn " + f.name + "\x1b[0m\n\x1b[3m" + f.prototype + "\x1b[0m\n\n" + f.docs + "\n"
 }
 
+fn (f: ^Function) to_txt(): str {
+	return f.name + "\n" + txt_header + "\n\n" + f.prototype + "\n\n" + f.docs + "\n" + txt_header + "\n"
+}
+
 fn (t: ^Type) to_term(): str {
 	out := strings.mk_builder()
 	out.write_str("\x1b[1m")
@@ -54,6 +61,20 @@ fn (t: ^Type) to_term(): str {
 	}
 
 	out.write_str(t.name + "\x1b[0m\n\x1b[3m" + t.body + "\n\n\x1b[0m" + t.docs + "\n")
+
+	return out.to_str()
+}
+
+fn (t: ^Type) to_txt(): str {
+	out := strings.mk_builder()
+
+	if t.is_interface {
+		out.write_str("interface ")
+	} else {
+		out.write_str("struct ")
+	}
+	
+	out.write_str(t.name + "\n" + txt_header + "\n\n" + t.body + "\n\n" + t.docs + "\n" + txt_header + "\n")
 
 	return out.to_str()
 }
@@ -178,7 +199,7 @@ fn get_header(inp: str): str {
 		out.write_str(strings.trimprefix(split[i], "//") + "\n")
 	}
 
-	return strings.replace("```\n" + out.to_str() + "```\n\n", "/", "")
+	return strings.replace(out.to_str(), "/", "")
 }
 
 fn help() {
@@ -192,6 +213,7 @@ fn help() {
 	printf("  -o: define output directory\n")
 	printf("  -r: include header from a file\n")
 	printf("  -m: export to markdown (terminal view by default)\n")
+	printf("  -t: export to plain text")
 	printf("  -h: show this help\n")
 }
 
@@ -220,6 +242,8 @@ fn main() {
 				do_header = true
 			case 'm':
 				out_type = markdown
+			case 't':
+				out_type = txt
 			case 'h':
 				help()
 			default:
@@ -229,6 +253,8 @@ fn main() {
 			files = append(files, std.argv(i))
 		}
 	}
+
+	txt_header = strings.repeat("_", 80)
 
 	for p in files {
 		f := std.fopen(p, "r")
@@ -243,7 +269,7 @@ fn main() {
 			out.write_str("# " + p + "\n\n")
       
 			if do_header {
-				out.write_str(get_header(inp))
+				out.write_str("```\n" + get_header(inp) + "```\n\n")
 			}
       
 			for e in els {
@@ -253,6 +279,22 @@ fn main() {
 			f = std.fopen(out_dir + p + ".md", "w")
 			std.fprintln(f, out.to_str())
 			std.fclose(f)
+		case txt:
+			out := strings.mk_builder()
+			out.write_str(p + "\n" + txt_header + "\n")
+      
+			if do_header {
+				out.write_str(get_header(inp) + txt_header + "\n\n")
+			}
+      
+			for e in els {
+				out.write_str(e.to_txt() + "\n")
+			}
+      
+			f = std.fopen(out_dir + p + ".txt", "w")
+			std.fprintln(f, out.to_str())
+			std.fclose(f)
+
 		case term:
 			for e in els {
 				printf("%s\n", e.to_term())
