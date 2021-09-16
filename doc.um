@@ -1,3 +1,5 @@
+// Auto docs from comments for umka
+// The "parsing" is horrible. TODO
 
 import (
 	"strings.um"
@@ -47,7 +49,7 @@ fn (f: ^Function) to_term(): str {
 }
 
 fn (f: ^Function) to_txt(): str {
-	return f.name + "\n" + txt_header + "\n\n" + f.prototype + "\n\n" + f.docs + "\n" + txt_header + "\n"
+	return "\n" + f.prototype + "\n\n" + f.docs + "\n" + txt_header + "\n"
 }
 
 fn (t: ^Type) to_term(): str {
@@ -66,17 +68,7 @@ fn (t: ^Type) to_term(): str {
 }
 
 fn (t: ^Type) to_txt(): str {
-	out := strings.mk_builder()
-
-	if t.is_interface {
-		out.write_str("interface ")
-	} else {
-		out.write_str("struct ")
-	}
-	
-	out.write_str(t.name + "\n" + txt_header + "\n\n" + t.body + "\n\n" + t.docs + "\n" + txt_header + "\n")
-
-	return out.to_str()
+	return "\n" + t.body + "\n\n" + t.docs + "\n" + txt_header + "\n"
 }
 
 fn (t: ^Type) to_markdown(): str {
@@ -172,7 +164,7 @@ fn get_elements(inp: str): []Element {
 			}
 
 			body := ""
-			if strings.contains(split[i], "}") {
+			if strings.contains(split[i], "}") || !strings.contains(split[i], "{") {
 				body = split[i]
 			} else {
 				for j:=i; j < len(split) && split[j-1] != '}'; j++ {
@@ -263,10 +255,12 @@ fn main() {
 		els := get_elements(inp)
 		std.fclose(f)
 
+		path_parts := strings.split(p, "/")
+		fname := path_parts[len(path_parts)-1]
 		switch out_type {
 		case markdown:
 			out := strings.mk_builder()
-			out.write_str("# " + p + "\n\n")
+			out.write_str("# " + fname + "\n\n")
       
 			if do_header {
 				out.write_str("```\n" + get_header(inp) + "```\n\n")
@@ -276,12 +270,12 @@ fn main() {
 				out.write_str(e.to_markdown() + "\n")
 			}
       
-			f = std.fopen(out_dir + p + ".md", "w")
+			f = std.fopen(out_dir + fname + ".md", "w")
 			std.fprintln(f, out.to_str())
 			std.fclose(f)
 		case txt:
 			out := strings.mk_builder()
-			out.write_str(p + "\n" + txt_header + "\n")
+			out.write_str(fname + "\n" + txt_header + "\n\n")
       
 			if do_header {
 				out.write_str(get_header(inp) + txt_header + "\n\n")
@@ -291,7 +285,11 @@ fn main() {
 				out.write_str(e.to_txt() + "\n")
 			}
       
-			f = std.fopen(out_dir + p + ".txt", "w")
+			f = std.fopen(out_dir + "/" + fname + ".txt", "w")
+			if f == null {
+				printf("could not open %s", out_dir + "/" + p + ".txt")
+				continue
+			}
 			std.fprintln(f, out.to_str())
 			std.fclose(f)
 
