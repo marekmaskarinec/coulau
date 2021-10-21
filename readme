@@ -11,11 +11,6 @@ Current libs:
 		- only markdown output rn
 		- depends on std.um and strings.um
 
-	farbfeld.um - farbfeld decoder and encoder
-		- working
-		- slow (i know of a fix)
-		- depends on std.um
-
 	filepath.um - platform independant path operation
 		- works on unix-like systems and windows
 		- depends on std.um
@@ -29,12 +24,6 @@ Current libs:
 		- works except for some off-by-one errors
 		- quite fast
 		- no deps
-
-	umka2bin.um - converts umka scripts to native library
-		- doesn't work, when imports are from different directory (will be fixed soon)
-		- depends on std.um and strings.um
-		- you still need a compiler, umka_api.h and libumka.a
-		- use aup instead of this
 	list.um - list implementation
 		- works
 
