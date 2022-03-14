@@ -1,0 +1,59 @@
+
+import (
+	"std.um"
+)
+
+fn readall(path: str): str {
+		f := std.fopen(path, "r")
+    const blockSize = 16
+    res := ""
+
+    for ok := true; ok {
+	    var buff: [blockSize + 1]char
+	    ok = std.fread(f, ^[blockSize]char(&buff)) == 1
+	    res += str([]char(buff))
+    }
+
+		std.fclose(f)
+    return res
+}
+
+fn main() {
+	fnames := []str{}
+
+	argc := std.argc()
+	for i:=1; i < argc; i++ {
+		a := std.argv(i)
+		if a[0] == "-" {
+			
+		} else {
+			fnames = append(fnames, a)
+		}
+	}
+
+	printf("#include <umka_api.h>\n" +
+		"#include <stdio.h>\n" +
+		"const char mods[%d][] = {\n", )
+
+	for f in fnames {
+		dat := readall(f)
+		printf("{")
+		for c in dat {
+			printf("%d, ", int(c))
+		}
+		printf("},\n")
+	}
+	printf("};\n")
+
+	printf("int main(int argc, char *argv[]) {\n" +
+		"void *umka = umkaAlloc(); int umkaOk = umkaInit(umka, NULL, mods[0], 0, 1024 * 1024, NULL, argv, argc);\n")
+
+	for i:=1; i < len(fnames); i++ {
+		printf("umkaAddModule(\"%s\", mods[%d]);\n", fnames[i], i)
+	}
+	
+	printf("if (umkaOk) umkaOk = umkaCompile(umka);\n" +
+		"if (umkaOk) umkaOk = umkaRun(umka);\n" +
+		"if (!umkaOk) { UmkaError err; UmkaGetError(umka, &err); printf(\"umka error %%s: (%%d, %%d): %%s\\n\", err.fileName, err.line, err.pos, err.msg); return; }\n" +
+		"umkaFree(umka);\n}")
+}
