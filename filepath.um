@@ -1,13 +1,3 @@
-////////////////////////////////////////////////////////////////////////
-//                                                                    //
-// filepath.um - public domain, os agnostic filepath utility for umka //
-// by Marek Maskarinec                                                //
-// https://github.com/marekmaskarinec/libs                            //
-//                                                                    //
-// How to use:                                                        //
-//   replace std.um with the path to your std.um                      //
-//                                                                    //
-////////////////////////////////////////////////////////////////////////
 
 import (
 	"std.um"

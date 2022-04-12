@@ -1,0 +1,95 @@
+
+import (
+	"std.um"
+	"map.um"
+	"strings.um"
+)
+
+var done: map.Map
+
+fn readall(f: std.File): str {
+    const blockSize = 16
+    res := ""
+
+    for ok := true; ok {
+	    var buff: [blockSize + 1]char
+	    ok = std.fread(f, ^[blockSize]char(&buff)) == 1
+	    res += str([]char(buff))
+    }
+
+    return res
+}
+
+fn trimdep(inp: str): str {
+	out := ""
+	for i:=0; i < len(inp); i++ {
+		if inp[i] != ' ' && inp[i] != '\"' && inp[i] != '\t' {
+			out += inp[i]
+		}
+	}
+	return out
+}
+
+fn getdeps(fname: str): []str {
+	f := std.fopen(fname, "r")
+	if f == null {
+		return []str{}
+	}
+	inp := readall(f)
+	std.fclose(f)
+
+	split := strings.split(inp, "\n")
+	out := []str{}
+
+	for i:=0; i < len(split); i++ {
+		if strings.contains(split[i], "import") && split[i][0] == 'i' {
+			if strings.contains(split[i], "(") {
+				for j:=1; j < len(split) && !strings.contains(split[i+j], ")"); j++ {
+					if strings.contains(split[i+j], "\"") {
+						out = append(out, trimdep(split[i+j]))
+					}
+				}
+				return out
+			}
+			if lsplit := strings.split(split[i], " "); len(lsplit) > 1 {
+				out = append(out, trimdep(lsplit[1]))
+				return out
+			}
+		}
+}
+	return out
+}
+
+fn justdir(name: str): str {
+	parts := strings.split(name, "/")
+	return strings.join(slice(parts, 0, len(parts) - 1), "/") + "/"
+}
+
+fn justfile(name: str): str {
+	parts := strings.split(name, "/")
+	return parts[len(parts) - 1]
+}
+
+fn gengraph(name: str): str {
+	if ^bool(done.get(justfile(name))) != null {
+		return ""
+	}
+	done.set(justfile(name), true)
+
+	deps := getdeps(name)
+	buf := ""
+	for i:=0; i < len(deps); i++ {
+		buf += "\"" + justfile(name) + "\" -> \"" + justfile(deps[i]) + "\"\n" + gengraph(justdir(name) + deps[i])
+	}
+
+	return buf
+}
+
+fn main() {
+	if std.argc() < 2 {
+		printf("please provide the main file\n")
+	}
+
+	done = map.Map{}
+	printf("digraph {\n%s}\n", gengraph(std.argv(1)))
+}

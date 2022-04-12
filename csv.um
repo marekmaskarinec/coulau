@@ -1,80 +1,71 @@
-//////////////////////////////////////////////////////////////////
-//                                                              //
-// csv.um - public domain csv parser and encoder for umka       //
-// by Marek Maskarinec                                          //
-// https://github.com/marekmaskarinec/libs                      //
-//                                                              //
-// How to use:                                                  //
-//   just import this                                           //
-//                                                              //
-// csv 101:                                                     //
-//   value,value2                                               //
-//   row2, value4                                               //
-//       ||                                                     //
-//       \/                                                     //
-//  [["value", "value2"],                                       //
-//   ["row2", " value4"]]                                       //
-//                                                              //
-//////////////////////////////////////////////////////////////////
+// You can prefix newline/comma by a backslash to excape it.
 
-import "strings.um" // for the string builder
+fn readStr(src: str, from: int, until: char): int {
+	for i:=from; i < len(src); i++ {
+		if src[i] == '\\' {
+			continue
+		}
 
-fn gettocomma(s: int, inp: str, le: ^int): str {
+		if src[i] == until {
+			return i - from
+		}
+	}
+
+	return -1
+}
+
+// Decodes a csv string to a 2d array of strings.
+fn decode*(src: str): [][]str {
+	out := [][]str{[]str{}}
+	rowi := 0
+	coli := 0
+
+	for i:=0; i < len(src); i++ {
+		start := i
+		out[rowi] = append(out[rowi], "")
+
+		for a:=0; i < len(src); i++ {
+			switch src[i] {
+			case '\\':
+				out[rowi][coli] += slice(src, start, i)
+				i++
+				start = i
+				continue
+			case ',':
+				out[rowi][coli] += slice(src, start, i)
+				coli++
+				break
+			case '\n':
+				out[rowi][coli] += slice(src, start, i)
+				out = append(out, []str{})
+				coli = 0
+				rowi++
+				break
+			}
+		}
+	}
+
+	return out
+}
+
+// Encodes a 2d array of strings into csv
+fn encode*(src: [][]str): str {
 	out := ""
-	i := s
-	for j:=0; i < len(inp) && inp[i] != ',' && inp[i] != '\n'; i++ {
-		out += inp[i]
-	}
-	le^ = i - 1
-	return out
-}
+	for i:=0; i < len(src); i++ {
+		for j:=0; j < len(src[i]); j++ {
+			for ci:=0; ci < len(src[i][j]); ci++ {
+				if src[i][j][ci] == '\n' || src[i][j][ci] == ',' {
+					out += "\\"
+				}
 
-fn get_row_w(inp: str, s: int): int {
-	out := 0
+				out += src[i][j][ci]
+			}
 
-	for i:=s; i < len(inp) && inp[i] != '\n'; i++ {
-		if inp[i] == ',' { out++ }
-	}
-
-	return out + 1
-}
-
-// parses input csv string.
-fn parse*(inp: str): [][]str {
-	var h: int
-	for i := 0; i < len(inp); i++ {
-		if inp[i] == '\n' { h++ }
-	}
-
-	out := make([][]str, h + 1)
-	var r, c: int
-	out[0] = make([]str, get_row_w(inp, 0))
-	out[0][0] = gettocomma(0, inp, &c)
-	c = 1
-
-	for i:=0; i < len(inp); i++ {
-		if inp[i] == '\n' {
-			r++
-			c = 1
-			out[r] = make([]str, get_row_w(inp, i+1))
-			out[r][0] = gettocomma(i+1, inp, &i)
-		} else if inp[i] == ',' {
-			out[r][c] = gettocomma(i+1, inp, &i)
-			c++
+			out += ","
 		}
-	}
-	return out
-}
 
-// turns 2d string array to string
-fn encode*(inp: [][]str): str {
-	b := strings.mk_builder()
-	for i:=0; i < len(inp); i++ {
-		for j:=0; j < len(inp[i]); j++ {
-			b.write_str(inp[i][j])
-			if j < len(inp[i])-1 { b.write_char(',') }
-		}
-		b.write_char('\n')
+		out += "\n"
 	}
-	return b.to_str()
+
+	return out
 }

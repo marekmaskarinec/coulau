@@ -1,16 +1,3 @@
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
-// strings.um - public domain string manipulation library for umka  //
-// by Marek Maskarinec                                              //
-// https://github.com/marekmaskarinec/libs                          //
-//                                                                  //
-// How to use:                                                      //
-//   just import this.                                              //
-//                                                                  //
-// TODO:                                                            //
-//  - increase performance                                          //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
 
 const BUILDER_STEP = 1024
 // builder allows for faster string addition.

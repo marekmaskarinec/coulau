@@ -1,16 +1,3 @@
-//////////////////////////////////////////////////////
-//                                                  //
-// umka2bin.um - public domain umka to c coneverter //
-// by Marek Maskarinec                              //
-// https://github.com/marekmaskarinec/libs          //
-//                                                  //
-// How to use:                                      //
-//   run this without any argument for help         //
-//                                                  //
-// TODO:                                            //
-//  - automatic imports from different locations    //
-//                                                  //
-//////////////////////////////////////////////////////
 
 import (
 	"std.um"
