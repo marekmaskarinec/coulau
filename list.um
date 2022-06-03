@@ -64,8 +64,13 @@ fn (l: ^List) insert_after*(a: ^Node, value: Any) {
 	n.value = value
 
 	n.prev = a
-	n.next = a.next
-	a.next.prev = n
+	if a != null {
+		n.next = a.next
+
+		if a.next != null {
+			a.next.prev = n
+		}
+	}
 
 	a.next = n
 
